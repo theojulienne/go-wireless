@@ -1,6 +1,6 @@
 package main
 
-import "github.com/theojulienne/go-iwlib/iwlib"
+import "github.com/theojulienne/go-wireless/iwlib"
 //import "fmt"
 
 func main() {

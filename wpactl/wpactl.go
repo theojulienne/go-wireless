@@ -21,8 +21,8 @@ type WPAController struct {
 }
 
 type WPAEvent struct {
-	name string
-	arguments map[string]string
+	Name string
+	Arguments map[string]string
 }
 
 type WPANetwork struct {
@@ -94,11 +94,11 @@ func (c *WPAController) Initialise() (error) {
 							continue
 						}
 
-						event := WPAEvent{ name: parts[0][3:], arguments: make(map[string]string) }
+						event := WPAEvent{ Name: parts[0][3:], Arguments: make(map[string]string) }
 						for _,record := range parts[1:] {
 							if strings.Index(record, "=") != -1 {
 								nvs := strings.SplitN(record, "=", 2)
-								event.arguments[nvs[0]] = nvs[1]
+								event.Arguments[nvs[0]] = nvs[1]
 							}
 						}
 

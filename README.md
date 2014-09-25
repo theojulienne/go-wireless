@@ -57,7 +57,7 @@ wpa_ctl.SaveConfiguration()
 for {
 	event := <- wpa_ctl.EventChannel
 	//log.Println(event)
-	switch event.name {
+	switch event.Name {
 		case "CTRL-EVENT-DISCONNECTED":
 			log.Println("Disconnected")
 		case "CTRL-EVENT-CONNECTED":

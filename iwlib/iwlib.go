@@ -7,7 +7,7 @@ import "C"
 
 import (
 	"errors"
-	"fmt"
+//	"fmt"
 	"unsafe"
 )
 
@@ -42,7 +42,7 @@ func GetWirelessNetworks(iface string) ([]WirelessScanResult, error) {
 		wsresult.SSID = C.GoString(&result.b.essid[0])
 		if len(wsresult.SSID) > 0 {
 			results = append(results, wsresult)
-			fmt.Printf("SSID: %v\n", wsresult)
+			//fmt.Printf("SSID: %v\n", wsresult)
 		}
 		result = result.next
 	}

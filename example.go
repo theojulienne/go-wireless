@@ -1,8 +1,16 @@
 package main
 
 import "github.com/theojulienne/go-wireless/iwlib"
-//import "fmt"
+import "fmt"
 
 func main() {
-	iwlib.GetWirelessNetworks("wlan0")
+	networks, err := iwlib.GetWirelessNetworks("wlan0")
+	if err != nil {
+		fmt.Printf("Error retrieve wireless networks:", err)
+		return
+	}
+	
+	for _, network := range networks {
+		fmt.Printf("SSID: %v\n", network.SSID)
+	}
 }

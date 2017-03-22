@@ -1,33 +1,36 @@
 package wpactl
 
 import (
-	"strings"
-	"net"
-	"log"
-	"fmt"
-	"os"
 	"encoding/csv"
 	"errors"
+	"fmt"
+	"log"
+	"net"
+	"os"
 	"strconv"
+	"strings"
 )
 
 type WPAController struct {
-	Interface string
+	Interface    string
 	EventChannel chan WPAEvent
 
-	lsockname string
-	conn *net.UnixConn
+	lsockname              string
+	conn                   *net.UnixConn
 	currentCommandResponse chan string
 }
 
 type WPAEvent struct {
-	Name string
+	Name      string
 	Arguments map[string]string
 }
 
 type WPANetwork struct {
-	Id int
-	SSID string
+	Id    int
+	Freq  int
+	RSSI  int
+	BSSID string
+	SSID  string
 	ESSID string
 	Flags string
 }
@@ -47,12 +50,12 @@ func (c *WPAController) Cleanup() {
 	os.Remove(c.lsockname)
 }
 
-func (c *WPAController) Initialise() (error) {
-	addr, err := net.ResolveUnixAddr("unixgram", "/var/run/wpa_supplicant/" + c.Interface)
+func (c *WPAController) Initialise() error {
+	addr, err := net.ResolveUnixAddr("unixgram", "/var/run/wpa_supplicant/"+c.Interface)
 	if err != nil {
 		return err
 	}
-	
+
 	c.lsockname = fmt.Sprintf("/tmp/wpa_ctrl_%d", os.Getpid())
 	laddr, err := net.ResolveUnixAddr("unixgram", c.lsockname)
 	if err != nil {
@@ -64,7 +67,7 @@ func (c *WPAController) Initialise() (error) {
 		return err
 	}
 
-	log.Println("Local addr: ", c.conn.LocalAddr());
+	log.Println("Local addr: ", c.conn.LocalAddr())
 
 	c.EventChannel = make(chan WPAEvent, 128)
 	c.currentCommandResponse = make(chan string, 1)
@@ -94,8 +97,8 @@ func (c *WPAController) Initialise() (error) {
 							continue
 						}
 
-						event := WPAEvent{ Name: parts[0][3:], Arguments: make(map[string]string) }
-						for _,record := range parts[1:] {
+						event := WPAEvent{Name: parts[0][3:], Arguments: make(map[string]string)}
+						for _, record := range parts[1:] {
 							if strings.Index(record, "=") != -1 {
 								nvs := strings.SplitN(record, "=", 2)
 								event.Arguments[nvs[0]] = nvs[1]
@@ -126,12 +129,12 @@ func (c *WPAController) SendCommand(command string) (string, error) {
 		return "", err
 	}
 
-	resp := <- c.currentCommandResponse
+	resp := <-c.currentCommandResponse
 	log.Println(">>>", resp)
 	return resp, nil
 }
 
-func (c *WPAController) SendCommandBool(command string) (error) {
+func (c *WPAController) SendCommandBool(command string) error {
 	resp, err := c.SendCommand(command)
 	if err != nil {
 		return err
@@ -166,7 +169,7 @@ func (c *WPAController) ListNetworks() ([]WPANetwork, error) {
 	networks := make([]WPANetwork, num_networks)
 	valid_networks := 0
 
-	for _,line := range lines[1:] {
+	for _, line := range lines[1:] {
 		fields := strings.Split(line, "\t")
 		id, err := strconv.Atoi(fields[0])
 		if err != nil || len(fields) != 4 {
@@ -182,15 +185,57 @@ func (c *WPAController) ListNetworks() ([]WPANetwork, error) {
 	return networks[:valid_networks], nil
 }
 
+func (c *WPAController) ScanNetworks() ([]WPANetwork, error) {
+	resp, err := c.SendCommand("SCAN")
+	if err != nil {
+		return nil, err
+	}
+	if resp != "OK\n" {
+		return nil, errors.New(resp)
+	}
+	resp, err = c.SendCommand("SCAN_RESULTS")
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.Split(resp, "\n")
+
+	num_networks := len(lines) - 1
+	networks := make([]WPANetwork, num_networks)
+	valid_networks := 0
+
+	for _, line := range lines[1:] {
+		fields := strings.Split(line, "\t")
+		if len(fields) != 5 {
+			continue
+		}
+		freq, err := strconv.Atoi(fields[1])
+		if err != nil {
+			continue
+		}
+		rssi, err := strconv.Atoi(fields[2])
+		if err != nil {
+			continue
+		}
+		networks[valid_networks].BSSID = fields[0]
+		networks[valid_networks].Freq = freq
+		networks[valid_networks].RSSI = rssi
+		networks[valid_networks].Flags = fields[3]
+		networks[valid_networks].SSID = fields[4]
+		valid_networks += 1
+	}
+
+	return networks[:valid_networks], nil
+}
+
 func (c *WPAController) AddNetwork() (int, error) {
 	return c.SendCommandInt("ADD_NETWORK")
 }
 
-func (c *WPAController) SetNetworkSettingRaw(networkId int, variable string, value string) (error) {
+func (c *WPAController) SetNetworkSettingRaw(networkId int, variable string, value string) error {
 	return c.SendCommandBool(fmt.Sprintf("SET_NETWORK %d %s %s", networkId, variable, value))
 }
 
-func (c *WPAController) SetNetworkSettingString(networkId int, variable string, value string) (error) {
+func (c *WPAController) SetNetworkSettingString(networkId int, variable string, value string) error {
 	return c.SetNetworkSettingRaw(networkId, variable, fmt.Sprintf("\"%s\"", value))
 }
 
@@ -198,27 +243,27 @@ func (c *WPAController) GetNetworkSetting(networkId int, variable string) (strin
 	return c.SendCommand(fmt.Sprintf("GET_NETWORK %d %s", networkId, variable))
 }
 
-func (c *WPAController) SelectNetwork(networkId int) (error) {
+func (c *WPAController) SelectNetwork(networkId int) error {
 	return c.SendCommandBool(fmt.Sprintf("SELECT_NETWORK %d", networkId))
 }
 
-func (c *WPAController) EnableNetwork(networkId int) (error) {
+func (c *WPAController) EnableNetwork(networkId int) error {
 	return c.SendCommandBool(fmt.Sprintf("ENABLE_NETWORK %d", networkId))
 }
 
-func (c *WPAController) DisableNetwork(networkId int) (error) {
+func (c *WPAController) DisableNetwork(networkId int) error {
 	return c.SendCommandBool(fmt.Sprintf("DISABLE_NETWORK %d", networkId))
 }
 
-func (c *WPAController) RemoveNetwork(networkId int) (error) {
+func (c *WPAController) RemoveNetwork(networkId int) error {
 	return c.SendCommandBool(fmt.Sprintf("REMOVE_NETWORK %d", networkId))
 }
 
-func (c *WPAController) ReloadConfiguration() (error) {
+func (c *WPAController) ReloadConfiguration() error {
 	return c.SendCommandBool(fmt.Sprintf("RECONFIGURE"))
 }
 
-func (c *WPAController) SaveConfiguration() (error) {
+func (c *WPAController) SaveConfiguration() error {
 	return c.SendCommandBool(fmt.Sprintf("SAVE_CONFIG"))
 }
 
@@ -243,6 +288,14 @@ func main() {
 		log.Println("NET", network)
 	}
 
+	networks, err := wpa_ctl.ScanNetworks()
+	if err != nil {
+		log.Fatal("Error retrieving networks:", err)
+	}
+	for _,network := range networks {
+		log.Println("NET", network)
+	}
+
 	i, _ := wpa_ctl.AddNetwork()
 	wpa_ctl.SetNetworkSettingString(i, "ssid", "helloworld")
 	wpa_ctl.SetNetworkSettingString(i, "psk", "thisisnotarealpsk")
@@ -250,12 +303,11 @@ func main() {
 	wpa_ctl.SetNetworkSettingRaw(i, "key_mgmt", "WPA-PSK")
 	wpa_ctl.SelectNetwork(i)
 	wpa_ctl.SaveConfiguration()
-	//
 
 	for {
 		event := <- wpa_ctl.EventChannel
 		//log.Println(event)
-		switch event.name {
+		switch event.Name {
 			case "CTRL-EVENT-DISCONNECTED":
 				log.Println("Disconnected")
 			case "CTRL-EVENT-CONNECTED":

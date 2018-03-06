@@ -42,6 +42,10 @@ func NewController(iface string) (*WPAController, error) {
 	}
 }
 
+func (c *WPAController) GetEventChannel() chan WPAEvent {
+	return c.EventChannel
+}
+
 func (c *WPAController) Cleanup() {
 	c.conn.Close()
 	os.Remove(c.lsockname)
@@ -221,48 +225,3 @@ func (c *WPAController) ReloadConfiguration() (error) {
 func (c *WPAController) SaveConfiguration() (error) {
 	return c.SendCommandBool(fmt.Sprintf("SAVE_CONFIG"))
 }
-
-/*
-func main() {
-	wpa_ctl, err := NewController("wlan0")
-	if err != nil {
-		log.Fatal("Error:", err)
-	}
-	defer wpa_ctl.Cleanup()
-
-	err = wpa_ctl.ReloadConfiguration()
-	if err != nil {
-		log.Fatal("Error:", err)
-	}
-
-	networks, err := wpa_ctl.ListNetworks()
-	if err != nil {
-		log.Fatal("Error retrieving networks:", err)
-	}
-	for _,network := range networks {
-		log.Println("NET", network)
-	}
-
-	i, _ := wpa_ctl.AddNetwork()
-	wpa_ctl.SetNetworkSettingString(i, "ssid", "helloworld")
-	wpa_ctl.SetNetworkSettingString(i, "psk", "thisisnotarealpsk")
-	wpa_ctl.SetNetworkSettingRaw(i, "scan_ssid", "1")
-	wpa_ctl.SetNetworkSettingRaw(i, "key_mgmt", "WPA-PSK")
-	wpa_ctl.SelectNetwork(i)
-	wpa_ctl.SaveConfiguration()
-	//
-
-	for {
-		event := <- wpa_ctl.EventChannel
-		//log.Println(event)
-		switch event.name {
-			case "CTRL-EVENT-DISCONNECTED":
-				log.Println("Disconnected")
-			case "CTRL-EVENT-CONNECTED":
-				log.Println("Connected")
-			case "CTRL-EVENT-SSID-TEMP-DISABLED":
-				log.Println("InvalidKey")
-		}
-	}
-}
-*/

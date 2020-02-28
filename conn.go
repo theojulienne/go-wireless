@@ -35,25 +35,6 @@ type Event struct {
 	Arguments map[string]string
 }
 
-// AP represents an access point seen by the scan networks command
-type AP struct {
-	ID    int
-	Freq  int
-	RSSI  int
-	BSSID string
-	SSID  string
-	ESSID string
-	Flags string
-}
-
-// Network represents a known network
-type Network struct {
-	ID    int
-	SSID  string
-	BSSID string
-	PSK   string
-}
-
 // Dial will dial the WPA control interface with the given
 // interface name
 func Dial(iface string) (*Conn, error) {

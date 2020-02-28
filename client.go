@@ -16,14 +16,20 @@ func NewClient(iface string) (c *Client, err error) {
 	return
 }
 
+// NewClientFromConn returns a new client from an already established connection
 func NewClientFromConn(conn *Conn) (c *Client) {
 	c.conn = conn
 	return
 }
 
+// Close will close the client connection
+func (cl *Client) Close() {
+	cl.conn.Close()
+}
+
 // Scan will scan for networks and return the APs it finds
 func (cl *Client) Scan() (nets []AP, err error) {
-	err = cl.conn.SendCommmandBool(CmdScan)
+	err = cl.conn.SendCommandBool(CmdScan)
 	if err != nil {
 		return
 	}

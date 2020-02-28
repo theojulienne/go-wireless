@@ -21,12 +21,18 @@ From there you can use the client:
 ```golang
 wc, err := wireless.NewClient("wlan0")
 defer wc.Close()
+```
 
-// get a list of APs that are in range
+Get a list of APs that are in range:
+
+```golang
 aps, err := wc.Scan()
 fmt.Println(aps, err)
+```
 
-// get a list of known networks
+Get a list of known networks:
+
+```golang
 nets, err := wc.Networks()
 fmt.Println(nets, err)
 ```

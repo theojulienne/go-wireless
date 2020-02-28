@@ -27,12 +27,8 @@ type Conn struct {
 	lsockname              string
 	conn                   *net.UnixConn
 	currentCommandResponse chan string
-}
 
-// Event is an event that happens in the WPA supplicant
-type Event struct {
-	Name      string
-	Arguments map[string]string
+	subs []Subscription
 }
 
 // Dial will dial the WPA control interface with the given

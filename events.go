@@ -1,5 +1,7 @@
 package wireless
 
+// This file contains components from github.com/brlbil/wpaclient
+//
 // Copyright (c) 2017 Birol Bilgin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -19,12 +21,6 @@ package wireless
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // UT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
-// Event is an event that happens in the WPA supplicant
-type Event struct {
-	Name      string
-	Arguments map[string]string
-}
 
 const (
 	// CtrlReq as defined in wpactrl/wpa_ctrl.h:19
@@ -388,3 +384,9 @@ const (
 	// GlobalCtrlIfacePortLimit as defined in wpactrl/wpa_ctrl.h:544
 	GlobalCtrlIfacePortLimit = 20
 )
+
+// Event is an event that happens in the WPA supplicant
+type Event struct {
+	Name      string
+	Arguments map[string]string
+}

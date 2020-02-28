@@ -1,5 +1,7 @@
 package wireless
 
+// This file contains components from github.com/brlbil/wpaclient
+//
 // Copyright (c) 2017 Birol Bilgin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a

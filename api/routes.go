@@ -2,6 +2,7 @@ package api
 
 import "github.com/gin-gonic/gin"
 
+// SetupRoutes will put handlers to routes on the given router
 func SetupRoutes(r gin.IRouter) {
 	r.GET("/interfaces", listInterfaces)
 	r.GET("/interfaces/:iface", notImplemented)
@@ -14,5 +15,4 @@ func SetupRoutes(r gin.IRouter) {
 	r.PUT("/interfaces/:iface/networks/:id_or_idstr", notImplemented)
 	r.GET("/interfaces/:iface/networks/:id_or_idstr", notImplemented)
 	r.DELETE("/interfaces/:iface/networks/:id_or_idstr", notImplemented)
-
 }

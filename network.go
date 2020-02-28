@@ -1,15 +1,11 @@
 package wireless
 
 import (
-	"bytes"
-	"encoding/csv"
 	"net"
-	"strconv"
-	"strings"
-
-	"github.com/pkg/errors"
 )
 
+// This file contains components from github.com/brlbil/wpaclient
+//
 // Copyright (c) 2017 Birol Bilgin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -49,51 +45,86 @@ func NewDisabledNetwork(ssid, psk string) Network {
 
 // Network represents a known network
 type Network struct {
-	ID    int
-	SSID  string
-	BSSID string
-	PSK   string
-	Flags []string
+	ID       int
+	IDStr    string
+	KeyMgmt  string
+	SSID     string
+	BSSID    string
+	ScanSSID bool
+	PSK      string
+	Flags    []string
 }
 
-func parseNetwork(b []byte) ([]Network, error) {
-	i := bytes.Index(b, []byte("\n"))
-	if i > 0 {
-		b = b[i:]
-	}
+// Connector is interfce than can connect a network
+type Connector interface {
+	Connect(Network) error
+}
 
-	r := csv.NewReader(bytes.NewReader(b))
-	r.Comma = '\t'
-	r.FieldsPerRecord = 4
+type Connectable interface {
+	SetCmds() []string
+}
 
-	recs, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	nts := []Network{}
-	for _, rec := range recs {
-		id, err := strconv.Atoi(rec[0])
-		if err != nil {
-			return nil, errors.Wrap(err, "parse id")
+// IsDisabled will return true if the network is disabled
+func (net Network) IsDisabled() bool {
+	for _, f := range net.Flags {
+		if f == "DISABLED" {
+			return true
 		}
-
-		nts = append(nts, Network{
-			ID:    id,
-			SSID:  rec[1],
-			BSSID: rec[2],
-			Flags: parseFlags(rec[3]),
-		})
 	}
-
-	return nts, nil
+	return false
 }
 
-func parseFlags(s string) []string {
-	s = strings.TrimPrefix(s, "[")
-	s = strings.TrimSuffix(s, "]")
+// Disable or enabled the network
+func (net Network) Disable(on bool) {
+	var idx int
+	var found bool
+	for i, f := range net.Flags {
+		if f == "DISABLED" {
+			found = true
+			idx = i
+			break
+		}
+	}
 
-	return strings.Split(s, "][")
+	if on && !found {
+		net.Flags = append(net.Flags, "DISABLED")
+		return
+	}
+
+	net.Flags = append(net.Flags[:idx], net.Flags[idx:]...)
+}
+
+// Connect will connect the network to the given connector
+func (net Network) Connect(cl Connector) error {
+	return cl.Connect(net)
+}
+
+// SetCmds will generate the set_network commands to run to set this network up in
+func (net Network) SetCmds() [][]string {
+	cmds := [][]string{}
+	cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "ssid", quote(net.SSID)})
+	if net.IDStr != "" {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "id_str", quote(net.IDStr)})
+	}
+
+	if net.ScanSSID {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "scan_ssid", "1'"})
+	}
+
+	for _, f := range net.Flags {
+		switch f {
+		case "DISABLED":
+			cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "disabled", "1"})
+		}
+	}
+
+	if net.PSK == "" {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "key_mgmt", "None"})
+	} else {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "psk", quote(net.PSK)})
+	}
+
+	return cmds
 }
 
 // AP represents an access point seen by the scan networks command
@@ -107,48 +138,4 @@ type AP struct {
 	Flags          []string
 	SignalStrength int
 	Frequency      int
-}
-
-func parseAP(b []byte) ([]AP, error) {
-	i := bytes.Index(b, []byte("\n"))
-	if i > 0 {
-		b = b[i:]
-	}
-
-	r := csv.NewReader(bytes.NewReader(b))
-	r.Comma = '\t'
-	r.FieldsPerRecord = 5
-
-	recs, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	aps := []AP{}
-	for _, rec := range recs {
-		bssid, err := net.ParseMAC(rec[0])
-		if err != nil {
-			return nil, errors.Wrap(err, "parse mac")
-		}
-
-		fr, err := strconv.Atoi(rec[1])
-		if err != nil {
-			return nil, errors.Wrap(err, "parse frequency")
-		}
-
-		ss, err := strconv.Atoi(rec[2])
-		if err != nil {
-			return nil, errors.Wrap(err, "parse signal strength")
-		}
-
-		aps = append(aps, AP{
-			BSSID:          bssid,
-			SSID:           rec[4],
-			Frequency:      fr,
-			SignalStrength: ss,
-			Flags:          parseFlags(rec[3]),
-		})
-	}
-
-	return aps, nil
 }

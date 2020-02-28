@@ -1,6 +1,7 @@
 package wpactl
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -9,7 +10,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
+
+type ErrCmdTimeout = errors.New("timeout while waiting for command response")
 
 type Conn struct {
 	Interface    string
@@ -42,9 +46,11 @@ type Network struct {
 	PSK   string
 }
 
+// Dial will dial the WPA control interface with the given
+// interface name
 func Dial(iface string) (*Conn, error) {
 	c := &Conn{Interface: iface}
-	err := c.Initialise()
+	err := c.init()
 	if err != nil {
 		return nil, err
 	} else {
@@ -52,6 +58,7 @@ func Dial(iface string) (*Conn, error) {
 	}
 }
 
+// Close will close the connection to the WPA control interface
 func (c *Conn) Close() {
 	c.conn.Close()
 	os.Remove(c.lsockname)
@@ -131,18 +138,34 @@ func (c *Conn) init() error {
 	return nil // ok
 }
 
+// SendCommand will call SendCommandWithContext with a 2 second timeout
 func (c *Conn) SendCommand(command string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	return c.SendCommandWithContext(ctx, command)
+}
+
+// SendCommandWithContext will send the command with a context
+func (c *Conn) SendCommandWithContext(ctx context.Context, command string) (string, error) {
 	log.Println("<<<", command)
 	_, err := c.conn.Write([]byte(command))
 	if err != nil {
 		return "", err
 	}
 
-	resp := <-c.currentCommandResponse
-	log.Println(">>>", resp)
-	return resp, nil
+	for {
+		select {
+		case resp := <-c.currentCommandResponse:
+			log.Println(">>>", resp)
+			return resp, nil
+		case <-ctx.Done():
+			return "", ErrCmdTimeout
+
+		}
+	}
 }
 
+// SendCommandBool will send a command and return an error 
+// if the response was not OK
 func (c *Conn) SendCommandBool(command string) error {
 	resp, err := c.SendCommand(command)
 	if err != nil {
@@ -154,6 +177,7 @@ func (c *Conn) SendCommandBool(command string) error {
 	return nil
 }
 
+// SendCommandInt will send a command where the response is expected to be an integer
 func (c *Conn) SendCommandInt(command string) (int, error) {
 	resp, err := c.SendCommand(command)
 	if err != nil {

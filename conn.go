@@ -2,7 +2,6 @@ package wireless
 
 import (
 	"context"
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
@@ -56,28 +55,12 @@ func (c *Conn) listen() {
 				// event message
 
 				if strings.Index(msg, "<3>CTRL-") == 0 {
-					// control event, sent to the channel
-					reader := csv.NewReader(strings.NewReader(msg))
-					reader.Comma = ' '
-					reader.LazyQuotes = true
-					reader.TrimLeadingSpace = false
-					parts, err := reader.Read()
+					ev, err := NewEventFromMsg(msg)
 					if err != nil {
-						log.Println("Error during parsing:", err)
-					}
-					if len(parts) == 0 {
 						continue
 					}
 
-					event := Event{Name: parts[0][3:], Arguments: make(map[string]string)}
-					for _, record := range parts[1:] {
-						if strings.Index(record, "=") != -1 {
-							nvs := strings.SplitN(record, "=", 2)
-							event.Arguments[nvs[0]] = nvs[1]
-						}
-					}
-
-					go c.publishEvent(event)
+					go c.publishEvent(ev)
 				}
 			} else {
 				c.currentCommandResponse <- msg

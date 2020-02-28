@@ -1,5 +1,12 @@
 package wireless
 
+import (
+	"encoding/csv"
+	"errors"
+	"log"
+	"strings"
+)
+
 // This file contains components from github.com/brlbil/wpaclient
 //
 // Copyright (c) 2017 Birol Bilgin
@@ -389,4 +396,28 @@ const (
 type Event struct {
 	Name      string
 	Arguments map[string]string
+}
+
+func NewEventFromMsg(msg string) (Event, error) {
+	// control event, sent to the channel
+	reader := csv.NewReader(strings.NewReader(msg))
+	reader.Comma = ' '
+	reader.LazyQuotes = true
+	reader.TrimLeadingSpace = false
+	parts, err := reader.Read()
+	if err != nil {
+		log.Println("Error during parsing:", err)
+	}
+	if len(parts) == 0 {
+		return Event{}, errors.New("invalid event message")
+	}
+
+	event := Event{Name: parts[0][3:], Arguments: make(map[string]string)}
+	for _, record := range parts[1:] {
+		if strings.Index(record, "=") != -1 {
+			nvs := strings.SplitN(record, "=", 2)
+			event.Arguments[nvs[0]] = nvs[1]
+		}
+	}
+	return event, nil
 }

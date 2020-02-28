@@ -157,3 +157,19 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 	}
 
 	return net, nil
+}
+
+// RemoveNetwork will RemoveNetwork
+func (cl *Client) RemoveNetwork(id int) error {
+	return cl.conn.SendCommandBool(CmdRemoveNetwork, strconv.Itoa(id))
+}
+
+// EnableNetwork will EnableNetwork
+func (cl *Client) EnableNetwork(id int) error {
+	return cl.conn.SendCommandBool(CmdEnableNetwork + " " + strconv.Itoa(id))
+}
+
+// DisableNetwork will DisableNetwork
+func (cl *Client) DisableNetwork(id int) error {
+	return cl.conn.SendCommandBool(CmdDisableNetwork + " " + strconv.Itoa(id))
+}

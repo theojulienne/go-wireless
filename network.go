@@ -45,14 +45,14 @@ func NewDisabledNetwork(ssid, psk string) Network {
 
 // Network represents a known network
 type Network struct {
-	ID       int
-	IDStr    string
-	KeyMgmt  string
-	SSID     string
-	BSSID    string
-	ScanSSID bool
-	PSK      string
-	Flags    []string
+	ID       int      `json:"id"`
+	IDStr    string   `json:"id_str"`
+	KeyMgmt  string   `json:"key_mgmt"`
+	SSID     string   `json:"ssid"`
+	BSSID    string   `json:"bssid"`
+	ScanSSID bool     `json:"scan_ssid"`
+	PSK      string   `json:"psk"`
+	Flags    []string `json:"flags"`
 }
 
 // Connector is interfce than can connect a network
@@ -129,13 +129,13 @@ func (net Network) SetCmds() [][]string {
 
 // AP represents an access point seen by the scan networks command
 type AP struct {
-	ID             int
-	Freq           int
-	RSSI           int
-	BSSID          net.HardwareAddr
-	SSID           string
-	ESSID          string
-	Flags          []string
-	SignalStrength int
-	Frequency      int
+	ID        int              `json:"id"`
+	Freq      int              `json:"freq"`
+	RSSI      int              `json:"rssi"`
+	BSSID     net.HardwareAddr `json:"bssid"`
+	SSID      string           `json:"ssid"`
+	ESSID     string           `json:"essid"`
+	Flags     []string         `json:"flags"`
+	Signal    int              `json:"signal"`
+	Frequency int              `json:"frequency"`
 }

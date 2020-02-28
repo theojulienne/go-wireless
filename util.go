@@ -83,11 +83,11 @@ func parseAP(b []byte) ([]AP, error) {
 		}
 
 		aps = append(aps, AP{
-			BSSID:          bssid,
-			SSID:           rec[4],
-			Frequency:      fr,
-			SignalStrength: ss,
-			Flags:          parseFlags(rec[3]),
+			BSSID:     bssid,
+			SSID:      rec[4],
+			Frequency: fr,
+			Signal:    ss,
+			Flags:     parseFlags(rec[3]),
 		})
 	}
 

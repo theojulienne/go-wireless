@@ -13,8 +13,13 @@ import (
 	"time"
 )
 
-type ErrCmdTimeout = errors.New("timeout while waiting for command response")
+var (
 
+	// ErrCmdTimeout is an error that happens when the command times out
+	ErrCmdTimeout = errors.New("timeout while waiting for command response")
+)
+
+// Conn represents a connection to a WPA supplicant control interface
 type Conn struct {
 	Interface    string
 	EventChannel chan Event
@@ -24,13 +29,15 @@ type Conn struct {
 	currentCommandResponse chan string
 }
 
+// Event is an event that happens in the WPA supplicant
 type Event struct {
 	Name      string
 	Arguments map[string]string
 }
 
+// AP represents an access point seen by the scan networks command
 type AP struct {
-	Id    int
+	ID    int
 	Freq  int
 	RSSI  int
 	BSSID string
@@ -39,8 +46,9 @@ type AP struct {
 	Flags string
 }
 
+// Network represents a known network
 type Network struct {
-	Id    int
+	ID    int
 	SSID  string
 	BSSID string
 	PSK   string
@@ -164,7 +172,7 @@ func (c *Conn) SendCommandWithContext(ctx context.Context, command string) (stri
 	}
 }
 
-// SendCommandBool will send a command and return an error 
+// SendCommandBool will send a command and return an error
 // if the response was not OK
 func (c *Conn) SendCommandBool(command string) error {
 	resp, err := c.SendCommand(command)

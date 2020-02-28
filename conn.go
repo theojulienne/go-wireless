@@ -120,16 +120,16 @@ func (c *Conn) init() error {
 }
 
 // SendCommand will call SendCommandWithContext with a 2 second timeout
-func (c *Conn) SendCommand(command string) (string, error) {
+func (c *Conn) SendCommand(command ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
-	return c.SendCommandWithContext(ctx, command)
+	return c.SendCommandWithContext(ctx, command...)
 }
 
 // SendCommandWithContext will send the command with a context
-func (c *Conn) SendCommandWithContext(ctx context.Context, command string) (string, error) {
+func (c *Conn) SendCommandWithContext(ctx context.Context, command ...string) (string, error) {
 	log.Println("<<<", command)
-	_, err := c.conn.Write([]byte(command))
+	_, err := c.conn.Write([]byte(strings.Join(command, " ")))
 	if err != nil {
 		return "", err
 	}
@@ -148,8 +148,8 @@ func (c *Conn) SendCommandWithContext(ctx context.Context, command string) (stri
 
 // SendCommandBool will send a command and return an error
 // if the response was not OK
-func (c *Conn) SendCommandBool(command string) error {
-	resp, err := c.SendCommand(command)
+func (c *Conn) SendCommandBool(command ...string) error {
+	resp, err := c.SendCommand(command...)
 	if err != nil {
 		return err
 	}
@@ -160,8 +160,8 @@ func (c *Conn) SendCommandBool(command string) error {
 }
 
 // SendCommandInt will send a command where the response is expected to be an integer
-func (c *Conn) SendCommandInt(command string) (int, error) {
-	resp, err := c.SendCommand(command)
+func (c *Conn) SendCommandInt(command ...string) (int, error) {
+	resp, err := c.SendCommand(command...)
 	if err != nil {
 		return 0, err
 	}

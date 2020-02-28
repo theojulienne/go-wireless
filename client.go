@@ -173,3 +173,13 @@ func (cl *Client) EnableNetwork(id int) error {
 func (cl *Client) DisableNetwork(id int) error {
 	return cl.conn.SendCommandBool(CmdDisableNetwork + " " + strconv.Itoa(id))
 }
+
+// SaveConfig will SaveConfig
+func (cl *Client) SaveConfig() error {
+	return cl.conn.SendCommandBool(CmdSaveConfig)
+}
+
+// LoadConfig will LoadConfig
+func (cl *Client) LoadConfig() error {
+	return cl.conn.SendCommandBool(CmdReconfigure)
+}

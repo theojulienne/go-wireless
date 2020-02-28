@@ -5,6 +5,22 @@ type Client struct {
 	conn *Conn
 }
 
+// NewClient will create a new client by connecting to the
+// given interface in WPA
+func NewClient(iface string) (c *Client, err error) {
+	c.conn, err = Dial(iface)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func NewClientFromConn(conn *Conn) (c *Client) {
+	c.conn = conn
+	return
+}
+
 // Scan will scan for networks and return the APs it finds
 func (cl *Client) Scan() (nets []AP, err error) {
 	err = cl.conn.SendCommmandBool(CmdScan)

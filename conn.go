@@ -17,6 +17,9 @@ var (
 
 	// ErrCmdTimeout is an error that happens when the command times out
 	ErrCmdTimeout = errors.New("timeout while waiting for command response")
+
+	// ErrScanFailed is an error that happens when scanning for wifi networks fails
+	ErrScanFailed = errors.New("scan failed")
 )
 
 // Conn represents a connection to a WPA supplicant control interface

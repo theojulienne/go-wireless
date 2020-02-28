@@ -6,7 +6,7 @@ import (
 
 // Subscription represents a subscription to one or events
 type Subscription struct {
-	ch     chan<- Event
+	ch     chan Event
 	topics string
 }
 
@@ -19,7 +19,7 @@ func (s *Subscription) publish(ev Event) error {
 }
 
 // Next will return a cahnnel that returns the next event
-func (s *Subscription) Next(ev Event) chan<- Event {
+func (s *Subscription) Next() chan Event {
 	return s.ch
 }
 

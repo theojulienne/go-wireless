@@ -34,7 +34,7 @@ Subsscibe to events:
 ```
 sub := wc.Subscribe(wireless.EventConnected, wireless.EventAuthReject, wireless.EventDisconnected)
 
-ev := <-sub.Next
+ev := <-sub.Next()
 switch ev.Name {
 	case wireless.EventConnected:
 		fmt.Println(ev.Arguments)

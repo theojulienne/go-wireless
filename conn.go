@@ -15,8 +15,7 @@ import (
 
 // Conn represents a connection to a WPA supplicant control interface
 type Conn struct {
-	Interface    string
-	EventChannel chan Event
+	Interface string
 
 	lsockname              string
 	conn                   *net.UnixConn
@@ -78,7 +77,7 @@ func (c *Conn) listen() {
 						}
 					}
 
-					c.EventChannel <- event
+					go c.publishEvent(event)
 				}
 			} else {
 				c.currentCommandResponse <- msg
@@ -106,7 +105,6 @@ func (c *Conn) init() error {
 
 	log.Println("Local addr: ", c.conn.LocalAddr())
 
-	c.EventChannel = make(chan Event, 128)
 	c.currentCommandResponse = make(chan string, 1)
 
 	go c.listen()

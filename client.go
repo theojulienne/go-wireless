@@ -33,6 +33,16 @@ func (cl *Client) Close() {
 	cl.conn.Close()
 }
 
+// Status will return the current state of the WPA
+func (cl *Client) Status() (State, error) {
+	data, err := cl.conn.SendCommand(CmdStatus)
+	if err != nil {
+		return State{}, err
+	}
+	s := NewState(data)
+	return s, nil
+}
+
 // Scan will scan for networks and return the APs it finds
 func (cl *Client) Scan() (nets []AP, err error) {
 	err = cl.conn.SendCommandBool(CmdScan)
@@ -74,33 +84,33 @@ func (cl *Client) Networks() (nets []Network, err error) {
 }
 
 // Connect to a new or existing network
-func (cl *Client) Connect(net Network) error {
+func (cl *Client) Connect(net Network) (Network, error) {
 	net, err := cl.AddOrUpdateNetwork(net)
 	if err != nil {
-		return err
+		return net, err
 	}
 
 	sub := cl.conn.Subscribe(EventNetworkNotFound, EventAuthReject, EventConnected, EventDisconnected, EventAssocReject)
 	if err := cl.EnableNetwork(net.ID); err != nil {
-		return err
+		return net, err
 	}
 
 	ev := <-sub.Next()
 
 	switch ev.Name {
 	case EventConnected:
-		return cl.SaveConfig()
+		return net, cl.SaveConfig()
 	case EventNetworkNotFound:
-		return errors.New("SSID not found")
+		return net, errors.New("SSID not found")
 	case EventAuthReject:
-		return errors.New("auth failed")
+		return net, errors.New("auth failed")
 	case EventDisconnected:
-		return errors.New("disconnected")
+		return net, errors.New("disconnected")
 	case EventAssocReject:
-		return errors.New("assocation rejected")
+		return net, errors.New("assocation rejected")
 	}
 
-	return errors.New("failed to catch event " + ev.Name)
+	return net, errors.New("failed to catch event " + ev.Name)
 }
 
 // AddOrUpdateNetwork will add or, if the network has IDStr set, update it

@@ -398,6 +398,7 @@ type Event struct {
 	Arguments map[string]string
 }
 
+// NewEventFromMsg will create a new event from the given message
 func NewEventFromMsg(msg string) (Event, error) {
 	// control event, sent to the channel
 	reader := csv.NewReader(strings.NewReader(msg))

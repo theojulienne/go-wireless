@@ -33,6 +33,16 @@ func (cl *Client) Close() {
 	cl.conn.Close()
 }
 
+// Conn will return the underlying connection
+func (cl *Client) Conn() *Conn {
+	return cl.conn
+}
+
+// Subscribe will subscribe to certain events that happen in WPA
+func (cl *Client) Subscribe(topics ...string) *Subscription {
+	return cl.conn.Subscribe(topics...)
+}
+
 // Status will return the current state of the WPA
 func (cl *Client) Status() (State, error) {
 	data, err := cl.conn.SendCommand(CmdStatus)

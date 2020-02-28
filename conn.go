@@ -20,7 +20,7 @@ type Conn struct {
 	conn                   *net.UnixConn
 	currentCommandResponse chan string
 
-	subs []Subscription
+	subs []*Subscription
 }
 
 // Dial will dial the WPA control interface with the given
@@ -60,7 +60,13 @@ func (c *Conn) listen() {
 						continue
 					}
 
-					go c.publishEvent(ev)
+					c.publishEvent(ev)
+
+				} else {
+					ev := Event{}
+					ev.Name = "log"
+					ev.Arguments = map[string]string{"msg": msg}
+					c.publishEvent(ev)
 				}
 			} else {
 				c.currentCommandResponse <- msg

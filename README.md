@@ -57,12 +57,12 @@ r,Serve(":8080")
 
 ## Endpoints
 
-[x] `GET /interfaces`
-[ ] `GET /interfaces/:iface`
-[ ] `PUT /interfaces/:iface`
-[x] `GET /interfaces/:iface/aps`
-[x] `GET /interfaces/:iface/networks`
-[ ] `POST /interfaces/:iface/networks`
-[ ] `PUT /interfaces/:iface/networks/:id_or_idstr`
-[ ] `GET /interfaces/:iface/networks/:id_or_idstr`
-[ ] `DELETE /interfaces/:iface/networks/:id_or_idstr`
+- [x] `GET /interfaces`
+- [ ] `GET /interfaces/:iface`
+- [ ] `PUT /interfaces/:iface`
+- [x] `GET /interfaces/:iface/aps`
+- [x] `GET /interfaces/:iface/networks`
+- [ ] `POST /interfaces/:iface/networks`
+- [ ] `PUT /interfaces/:iface/networks/:id_or_idstr`
+- [ ] `GET /interfaces/:iface/networks/:id_or_idstr`
+- [ ] `DELETE /interfaces/:iface/networks/:id_or_idstr`

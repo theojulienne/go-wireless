@@ -8,6 +8,8 @@ Requires a running wpa_supplicant with control interface at `/var/run/wpa_suppli
 
 # Usage
 
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/theojulienne/go-wireless)
+
 Get a list of wifi cards attached:
 
 ```golang
@@ -29,7 +31,23 @@ nets, err := wc.Networks()
 fmt.Println(nets, err)
 ```
 
-Subsscibe to events:
+Connect to networks:
+
+```golang
+net := NewNetwork("FBI Surveillance Van #4", "secretpass")
+net, err := wc.Connect(net)
+```
+
+Disable networks:
+
+```golang
+nets, err:= wc.Networks()
+net, err := nets.Find("FBI Surveillance Van #4")
+net.Disable(true)
+net, err := wc.UpdateNetwork(net)
+```
+
+Subscribe to events:
 
 ```golang
 sub := wc.Subscribe(wireless.EventConnected, wireless.EventAuthReject, wireless.EventDisconnected)
@@ -43,6 +61,13 @@ switch ev.Name {
 	case wireless.EventDisconnected:
 		fmt.Println(ev.Arguments)
 }
+```
+
+Check the status of the connection:
+
+```golang
+st, err := wc.Status()
+fmt.Printf("%+v\n", st)
 ```
 
 # API

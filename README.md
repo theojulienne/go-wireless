@@ -44,3 +44,13 @@ switch ev.Name {
 		fmt.Println(ev.Arguments)
 }
 ```
+
+# API
+
+There is an API that can be used with [gin](https://github.com/gin-gonic/gin):
+
+```
+r := gin.Default()
+api.SetupRoutes(r)
+r,Serve(":8080")
+```

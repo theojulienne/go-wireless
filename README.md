@@ -10,13 +10,13 @@ Requires a running wpa_supplicant with control interface at `/var/run/wpa_suppli
 
 Get a list of wifi cards attached:
 
-```
+```golang
 ifaces := wireless.Interfaces()
 ```
 
 From there you can use the client:
 
-```
+```golang
 wc, err := wireless.NewClient("wlan0")
 defer wc.Close()
 
@@ -31,7 +31,7 @@ fmt.Println(nets, err)
 
 Subsscibe to events:
 
-```
+```golang
 sub := wc.Subscribe(wireless.EventConnected, wireless.EventAuthReject, wireless.EventDisconnected)
 
 ev := <-sub.Next()
@@ -49,7 +49,7 @@ switch ev.Name {
 
 There is an API that can be used with [gin](https://github.com/gin-gonic/gin):
 
-```
+```golang
 r := gin.Default()
 api.SetupRoutes(r)
 r,Serve(":8080")

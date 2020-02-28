@@ -1,4 +1,4 @@
-package wpactl
+package wireless
 
 import (
 	"context"
@@ -61,9 +61,8 @@ func Dial(iface string) (*Conn, error) {
 	err := c.init()
 	if err != nil {
 		return nil, err
-	} else {
-		return c, nil
 	}
+	return c, nil
 }
 
 // Close will close the connection to the WPA control interface
@@ -133,7 +132,7 @@ func (c *Conn) init() error {
 
 	log.Println("Local addr: ", c.conn.LocalAddr())
 
-	c.EventChannel = make(chan WPAEvent, 128)
+	c.EventChannel = make(chan Event, 128)
 	c.currentCommandResponse = make(chan string, 1)
 
 	go c.listen()
@@ -149,6 +148,7 @@ func (c *Conn) init() error {
 // SendCommand will call SendCommandWithContext with a 2 second timeout
 func (c *Conn) SendCommand(command string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
 	return c.SendCommandWithContext(ctx, command)
 }
 

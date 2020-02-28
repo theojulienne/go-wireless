@@ -30,6 +30,23 @@ import (
 // UT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// NewNamedNetwork will create a new network with the given parameters
+func NewNamedNetwork(name, ssid, psk string) Network {
+	return Network{IDStr: name, SSID: ssid, PSK: psk}
+}
+
+// NewNetwork will create a new network with the given parameters
+func NewNetwork(ssid, psk string) Network {
+	return NewNamedNetwork(ssid, ssid, psk)
+}
+
+// NewDisabledNetwork will create a new disabled network with the given parameters
+func NewDisabledNetwork(ssid, psk string) Network {
+	n := NewNamedNetwork(ssid, ssid, psk)
+	n.Flags = append(n.Flags, "DISABLED")
+	return n
+}
+
 // Network represents a known network
 type Network struct {
 	ID    int

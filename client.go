@@ -1,5 +1,9 @@
 package wireless
 
+import (
+	"time"
+)
+
 // Client represents a wireless client
 type Client struct {
 	conn *Conn
@@ -43,6 +47,8 @@ func (cl *Client) Scan() (nets []AP, err error) {
 			err = ErrScanFailed
 			return
 		case <-results.Next():
+			break
+		case <-time.NewTimer(time.Second * 2).C:
 			break
 		}
 	}

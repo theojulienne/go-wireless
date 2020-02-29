@@ -1,9 +1,5 @@
 package wireless
 
-import (
-	"net"
-)
-
 // This file contains components from github.com/brlbil/wpaclient
 //
 // Copyright (c) 2017 Birol Bilgin
@@ -127,15 +123,27 @@ func (net Network) SetCmds() [][]string {
 	return cmds
 }
 
-// AP represents an access point seen by the scan networks command
-type AP struct {
-	ID        int              `json:"id"`
-	Freq      int              `json:"freq"`
-	RSSI      int              `json:"rssi"`
-	BSSID     net.HardwareAddr `json:"bssid"`
-	SSID      string           `json:"ssid"`
-	ESSID     string           `json:"essid"`
-	Flags     []string         `json:"flags"`
-	Signal    int              `json:"signal"`
-	Frequency int              `json:"frequency"`
+// Networks models a collection of networks
+type Networks []Network
+
+// FindByIDStr will find a network by the given ID Str or return false
+func (nets Networks) FindByIDStr(idStr string) (Network, bool) {
+	for _, n := range nets {
+		if n.IDStr == idStr {
+			return n, true
+		}
+	}
+
+	return Network{}, false
+}
+
+// FindBySSID will find a network by the given SSID or return false
+func (nets Networks) FindBySSID(ssid string) (Network, bool) {
+	for _, n := range nets {
+		if n.SSID == ssid {
+			return n, true
+		}
+	}
+
+	return Network{}, false
 }

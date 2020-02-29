@@ -28,6 +28,7 @@ Get a list of APs that are in range:
 ```golang
 aps, err := wc.Scan()
 fmt.Println(aps, err)
+ap, ok := wireless.APs(aps).FindBySSID("CIA Predator Drone 237A")
 ```
 
 Get a list of known networks:
@@ -48,7 +49,7 @@ Disable networks:
 
 ```golang
 nets, err:= wc.Networks()
-net, err := nets.Find("FBI Surveillance Van #4")
+net, err := net, ok := wireless.Networks(nets).FindBySSID("FBI Surveillance Van #4")
 net.Disable(true)
 net, err := wc.UpdateNetwork(net)
 ```

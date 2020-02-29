@@ -47,7 +47,12 @@ func parseFlags(s string) []string {
 	s = strings.TrimPrefix(s, "[")
 	s = strings.TrimSuffix(s, "]")
 
-	return strings.Split(s, "][")
+	flags := strings.Split(s, "][")
+	if len(flags) == 1 && flags[0] == "" {
+		return []string{}
+	}
+
+	return flags
 }
 
 func parseAP(b []byte) ([]AP, error) {

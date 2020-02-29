@@ -76,7 +76,11 @@ st, err := wc.Status()
 fmt.Printf("%+v\n", st)
 ```
 
-# API
+## Examples
+
+Examples of the usage can be found in the `cmd` directory.
+
+## API
 
 There is an API that can be used with [gin](https://github.com/gin-gonic/gin):
 

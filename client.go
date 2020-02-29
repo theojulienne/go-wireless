@@ -111,13 +111,13 @@ func (cl *Client) Connect(net Network) (Network, error) {
 	case EventConnected:
 		return net, cl.SaveConfig()
 	case EventNetworkNotFound:
-		return net, errors.New("SSID not found")
+		return net, ErrSSIDNotFound
 	case EventAuthReject:
-		return net, errors.New("auth failed")
+		return net, ErrAuthFailed
 	case EventDisconnected:
-		return net, errors.New("disconnected")
+		return net, ErrDisconnected
 	case EventAssocReject:
-		return net, errors.New("assocation rejected")
+		return net, ErrAssocRejected
 	}
 
 	return net, errors.New("failed to catch event " + ev.Name)
@@ -145,7 +145,7 @@ func (cl *Client) AddOrUpdateNetwork(net Network) (Network, error) {
 // if the network doesn't have IDStr specified
 func (cl *Client) UpdateNetwork(net Network) (Network, error) {
 	if net.IDStr == "" {
-		return net, errors.New("no id_str field found")
+		return net, ErrNoIdentifier
 	}
 
 	for _, cmd := range net.SetCmds() {

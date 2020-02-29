@@ -2,7 +2,6 @@ package wireless
 
 import (
 	"encoding/csv"
-	"errors"
 	"log"
 	"strings"
 )
@@ -410,7 +409,7 @@ func NewEventFromMsg(msg string) (Event, error) {
 		log.Println("Error during parsing:", err)
 	}
 	if len(parts) == 0 {
-		return Event{}, errors.New("invalid event message")
+		return Event{}, ErrInvalidEvent
 	}
 
 	event := Event{Name: parts[0][3:], Arguments: make(map[string]string)}

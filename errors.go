@@ -12,6 +12,13 @@ var (
 
 	// ErrScanFailed is an error that happens when scanning for wifi networks fails
 	ErrScanFailed = errors.New("scan failed")
+
+	ErrSSIDNotFound  = errors.New("SSID not found")
+	ErrAuthFailed    = errors.New("auth failed")
+	ErrDisconnected  = errors.New("disconnected")
+	ErrAssocRejected = errors.New("assocation rejected")
+	ErrNoIdentifier  = errors.New("no id_str field found")
+	ErrInvalidEvent  = errors.New("invalid event message")
 )
 
 // IsUseOfClosedNetworkConnectionError will return true if the error is about use of

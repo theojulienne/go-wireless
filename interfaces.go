@@ -10,7 +10,7 @@ import (
 // interfaces from the current system
 var Interfaces = SysFSInterfaces
 
-// SysFSInterfaces returns the wireless interfaces found in the SysFS (/sys)
+// SysFSInterfaces returns the wireless interfaces found in the SysFS (/sys/class/net)
 func SysFSInterfaces() []string {
 	s := []string{}
 	base := "/sys/class/net"

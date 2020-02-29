@@ -18,7 +18,7 @@ func (s *Subscription) publish(ev Event) error {
 	return nil
 }
 
-// Next will return a cahnnel that returns events
+// Next will return a channel that returns events
 func (s *Subscription) Next() chan Event {
 	return s.ch
 }

@@ -11,9 +11,16 @@ type Subscription struct {
 }
 
 func (s *Subscription) publish(ev Event) error {
-	// if _, ok := <-s.ch; !ok {
-	// 	return errors.New("Topic has been closed")
-	// }
+	if s.ch == nil {
+		return nil
+	}
+
+	// don't let slow consumers cause goroutine leak, drop
+	// events if the channel is full
+	if len(s.ch) == cap(s.ch) {
+		return nil
+	}
+
 	s.ch <- ev
 	return nil
 }
@@ -31,17 +38,7 @@ func (s *Subscription) Unsubscribe() {
 
 func (c *Conn) publishEvent(ev Event) {
 	for _, sub := range c.subs {
-		if sub.ch == nil {
-			continue
-		}
-
-		// don't let slow consumers cause goroutine leak, drop
-		// events if the channel is full
-		if len(sub.ch) == cap(sub.ch) {
-			continue
-		}
-
-		if strings.Contains(sub.topics, ev.Name) {
+		if strings.Contains(sub.topics, ev.Name) || sub.topics == "" {
 			sub.publish(ev)
 		}
 	}

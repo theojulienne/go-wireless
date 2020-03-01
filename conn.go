@@ -64,7 +64,7 @@ func (c *Conn) listen() {
 
 				} else {
 					ev := Event{}
-					ev.Name = "log"
+					ev.Name = "logs"
 					ev.Arguments = map[string]string{"msg": msg}
 					c.publishEvent(ev)
 				}

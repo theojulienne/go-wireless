@@ -25,9 +25,10 @@ func main() {
 	}
 	defer wc.Close()
 
-	if err := wc.Connect(wireless.NewNetwork(os.Args[1], os.Args[2])); err != nil {
+	net, err := wc.Connect(wireless.NewNetwork(os.Args[1], os.Args[2]))
+	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Connected to " + os.Args[1])
+	fmt.Printf("Connected to " + net.SSID)
 }

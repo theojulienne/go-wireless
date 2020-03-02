@@ -44,35 +44,37 @@ func (c *Conn) listen() {
 	buf := make([]byte, 2048)
 	for {
 		bytesRead, err := c.conn.Read(buf)
-		if err != nil {
-			if IsUseOfClosedNetworkConnectionError(err) {
-				continue
-			}
-			log.Println("Error:", err)
-		} else {
-			msg := string(buf[:bytesRead])
-			if msg[0] == '<' {
-				// event message
-
-				if strings.Index(msg, "<3>CTRL-") == 0 {
-					ev, err := NewEventFromMsg(msg)
-					if err != nil {
-						continue
-					}
-
-					c.publishEvent(ev)
-
-				} else {
-					ev := Event{}
-					ev.Name = "logs"
-					ev.Arguments = map[string]string{"msg": msg}
-					c.publishEvent(ev)
-				}
-			} else {
-				c.currentCommandResponse <- msg
-			}
-		}
+		c.processMessage(bytesRead, buf, err)
 	}
+}
+
+func (c *Conn) processMessage(bytesRead int, data []byte, err error) {
+	if err != nil {
+		if !IsUseOfClosedNetworkConnectionError(err) {
+			log.Println("Error:", err)
+		}
+		return
+	}
+
+	msg := string(data[:bytesRead])
+	if msg[0] != '<' {
+		c.currentCommandResponse <- msg
+		return
+	}
+
+	var ev Event
+	if strings.Index(msg, "<3>CTRL-") == 0 {
+		ev, err = NewEventFromMsg(msg)
+		if err != nil {
+			log.Println("Error:", err)
+			return
+		}
+	} else {
+		ev.Name = "logs"
+		ev.Arguments = map[string]string{"msg": msg[3:]}
+	}
+
+	c.publishEvent(ev)
 }
 
 func (c *Conn) init() error {

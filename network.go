@@ -70,6 +70,16 @@ func (net Network) IsDisabled() bool {
 	return false
 }
 
+// IsCurrent will return true if the network is the currently active one
+func (net Network) IsCurrent() bool {
+	for _, f := range net.Flags {
+		if f == "CURRENT" {
+			return true
+		}
+	}
+	return false
+}
+
 // Disable or enabled the network
 func (net Network) Disable(on bool) {
 	var idx int
@@ -141,6 +151,17 @@ func (nets Networks) FindByIDStr(idStr string) (Network, bool) {
 func (nets Networks) FindBySSID(ssid string) (Network, bool) {
 	for _, n := range nets {
 		if n.SSID == ssid {
+			return n, true
+		}
+	}
+
+	return Network{}, false
+}
+
+// FindCurrent will find the current network or return false
+func (nets Networks) FindCurrent() (Network, bool) {
+	for _, n := range nets {
+		if n.IsCurrent() {
 			return n, true
 		}
 	}

@@ -10,6 +10,17 @@ import (
 // interfaces from the current system
 var Interfaces = SysFSInterfaces
 
+// DefaultInterface will return the default wireless interface, being the first
+// one returned from the Interfaces method
+func DefaultInterface() (string, bool) {
+	ifs := Interfaces()
+	if len(ifs) == 0 {
+		return "", false
+	}
+
+	return ifs[0], true
+}
+
 // SysFSInterfaces returns the wireless interfaces found in the SysFS (/sys/class/net)
 func SysFSInterfaces() []string {
 	s := []string{}

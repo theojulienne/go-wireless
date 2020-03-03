@@ -8,16 +8,11 @@ import (
 )
 
 func main() {
-	ifaces := wireless.Interfaces()
-	var iface string
-	switch len(ifaces) {
-	case 0:
+	iface, ok := wireless.DefaultInterface()
+	if !ok {
 		panic("no wifi cards on the system")
-	default:
-		iface = ifaces[0]
 	}
-
-	fmt.Printf("Using interface: " + iface)
+	fmt.Printf("Using interface: %s\n", iface)
 
 	wc, err := wireless.NewClient(iface)
 	if err != nil {

@@ -14,6 +14,7 @@ type Client struct {
 // NewClient will create a new client by connecting to the
 // given interface in WPA
 func NewClient(iface string) (c *Client, err error) {
+	c = new(Client)
 	c.conn, err = Dial(iface)
 	if err != nil {
 		return
@@ -63,17 +64,19 @@ func (cl *Client) Scan() (nets []AP, err error) {
 	results := cl.conn.Subscribe(EventScanResults)
 	failed := cl.conn.Subscribe(EventScanFailed)
 
-	for {
-		select {
-		case <-failed.Next():
-			err = ErrScanFailed
-			return
-		case <-results.Next():
-			break
-		case <-time.NewTimer(time.Second * 2).C:
-			break
+	func() {
+		for {
+			select {
+			case <-failed.Next():
+				err = ErrScanFailed
+				return
+			case <-results.Next():
+				return
+			case <-time.NewTimer(time.Second * 2).C:
+				return
+			}
 		}
-	}
+	}()
 
 	scanned, err := cl.conn.SendCommand(CmdScanResults)
 	if err != nil {

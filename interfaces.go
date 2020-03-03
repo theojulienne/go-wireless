@@ -18,7 +18,7 @@ func SysFSInterfaces() []string {
 
 	//  look for the wireless folder in each interfces directory to determine if it is a wireless device
 	for _, iface := range matches {
-		if _, err := os.Stat(path.Join(iface, "wireless")); err != nil {
+		if _, err := os.Stat(path.Join(iface, "wireless")); err == nil {
 			s = append(s, path.Base(iface))
 		}
 	}

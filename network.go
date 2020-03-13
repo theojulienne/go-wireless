@@ -51,15 +51,6 @@ type Network struct {
 	Flags    []string `json:"flags"`
 }
 
-// Connector is interfce than can connect a network
-type Connector interface {
-	Connect(Network) error
-}
-
-type Connectable interface {
-	SetCmds() []string
-}
-
 // IsDisabled will return true if the network is disabled
 func (net Network) IsDisabled() bool {
 	for _, f := range net.Flags {
@@ -140,11 +131,6 @@ func (net Network) Disable(on bool) {
 	}
 
 	net.Flags = append(net.Flags[:idx], net.Flags[idx:]...)
-}
-
-// Connect will connect the network to the given connector
-func (net Network) Connect(cl Connector) error {
-	return cl.Connect(net)
 }
 
 // Networks models a collection of networks

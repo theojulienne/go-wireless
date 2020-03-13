@@ -17,7 +17,7 @@ type State struct {
 	PairwiseCipher string `json:"pairwise_cipher"`
 }
 
-// NewState will return the state of the WPA
+// NewState will return the state of the WPA when given the raw output
 func NewState(data string) State {
 	s := State{}
 	for _, l := range strings.Split(data, "\n") {

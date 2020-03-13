@@ -7,6 +7,7 @@ build:
 	go build -o bin/currentap ./cmd/currentap
 	go build -o bin/wpalogs ./cmd/wpalogs
 	go build -o bin/wpaspy ./cmd/wpaspy
+	go build -o bin/wifistate ./cmd/wifistate
 
 test:
 	go test ./... -race

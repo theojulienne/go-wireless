@@ -6,7 +6,16 @@ A way to interact with the Wireless interfaces on a Linux machine using WPA Supp
 
 ## Requirements
 
-Requires a running wpa_supplicant with control interface at `/var/run/wpa_supplicant`.
+Requires a running wpa_supplicant with control interface at `/var/run/wpa_supplicant` (which is usually 
+a symlink to `/run/wpa_supplicant`).  This requires the config file to contain the line:
+
+```
+ctrl_interface=DIR=/run/wpa_supplicant GROUP=wheel
+```
+
+Or for the `wpa_supplicant` instance to be running with the `-O /run/wpa_supplicant` argument.
+
+You will probably also need to be running as root unless you are in the specified group (`wheel` in the above example).
 
 # Usage
 

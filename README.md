@@ -19,6 +19,8 @@ You will probably also need to be running as root unless you are in the specifie
 
 # Usage
 
+Examples of the usage can be found in the `cmd` directory as standalone commands.
+
 Get a list of wifi cards attached:
 
 ```golang
@@ -86,9 +88,6 @@ st, err := wc.Status()
 fmt.Printf("%+v\n", st)
 ```
 
-## Examples
-
-Examples of the usage can be found in the `cmd` directory.
 
 ## API
 

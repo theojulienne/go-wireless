@@ -8,7 +8,7 @@ import (
 
 // Interfaces is a shortcut to the best known method for gathering the wireless
 // interfaces from the current system
-var Interfaces = WPAInterfaces
+var Interfaces = InterfacesFromWPARunDir
 
 // DefaultInterface will return the default wireless interface, being the first
 // one returned from the Interfaces method
@@ -21,10 +21,10 @@ func DefaultInterface() (string, bool) {
 	return ifs[0], true
 }
 
-// WPAInterfaces returns the interfaces that WPA Supplicant is currently running on
+// InterfacesFromWPARunDir returns the interfaces that WPA Supplicant is currently running on
 // by checking the sockets available in the run directory (/var/run/wpa_supplicant)
 // however a different run directory can be specified as the basePath parameter
-func WPAInterfaces(basePath ...string) []string {
+func InterfacesFromWPARunDir(basePath ...string) []string {
 	s := []string{}
 	base := "/var/run/wpa_supplicant"
 	if len(basePath) > 0 {
@@ -39,8 +39,8 @@ func WPAInterfaces(basePath ...string) []string {
 	return s
 }
 
-// SysFSInterfaces returns the wireless interfaces found in the SysFS (/sys/class/net)
-func SysFSInterfaces() []string {
+// InterfacesFromSysfs returns the wireless interfaces found in the SysFS (/sys/class/net)
+func InterfacesFromSysfs() []string {
 	s := []string{}
 	base := "/sys/class/net"
 	matches, _ := filepath.Glob(path.Join(base, "*"))

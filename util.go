@@ -106,3 +106,7 @@ func quote(s string) string {
 func itoa(i int) string {
 	return strconv.Itoa(i)
 }
+
+func unquote(s string) string {
+	return strings.Trim(s, `"`)
+}

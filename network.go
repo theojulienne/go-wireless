@@ -80,6 +80,48 @@ func (net Network) IsCurrent() bool {
 	return false
 }
 
+type attributeGetter interface {
+	GetNetworkAttr(int, string) (string, error)
+}
+
+func (net *Network) populateAttrs(cl attributeGetter) error {
+	v, err := cl.GetNetworkAttr(net.ID, "ssid")
+	if err != nil {
+		return err
+	}
+	net.SSID = unquote(v)
+
+	v, err = cl.GetNetworkAttr(net.ID, "id_str")
+	if err != nil {
+		return err
+	}
+	net.IDStr = unquote(v)
+
+	v, err = cl.GetNetworkAttr(net.ID, "key_mgmt")
+	if err != nil {
+		return err
+	}
+	net.KeyMgmt = v
+
+	v, err = cl.GetNetworkAttr(net.ID, "scan_ssid")
+	if err != nil {
+		return err
+	}
+	if v == "1" {
+		net.ScanSSID = true
+	}
+
+	v, err = cl.GetNetworkAttr(net.ID, "disabled")
+	if err != nil {
+		return err
+	}
+	if v == "1" {
+		net.Flags = append(net.Flags, "DISABLED")
+	}
+
+	return nil
+}
+
 // Disable or enabled the network
 func (net Network) Disable(on bool) {
 	var idx int

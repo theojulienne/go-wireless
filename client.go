@@ -3,6 +3,7 @@ package wireless
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -93,7 +94,16 @@ func (cl *Client) Networks() (nets []Network, err error) {
 		return nil, err
 	}
 
-	return parseNetwork([]byte(data))
+	nets, err = parseNetwork([]byte(data))
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range nets {
+		(&nets[i]).populateAttrs(cl)
+	}
+
+	return nets, nil
 }
 
 // Connect to a new or existing network
@@ -205,4 +215,14 @@ func (cl *Client) SaveConfig() error {
 // LoadConfig will LoadConfig
 func (cl *Client) LoadConfig() error {
 	return cl.conn.SendCommandBool(CmdReconfigure)
+}
+
+// GetNetworkAttr will get the given attribute of the given network
+func (cl *Client) GetNetworkAttr(id int, attr string) (string, error) {
+	s, err := cl.conn.SendCommand(CmdGetNetwork, strconv.Itoa(id), attr)
+	if err != nil {
+		return s, err
+	}
+
+	return strings.TrimSpace(s), nil
 }

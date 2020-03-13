@@ -1,5 +1,7 @@
 package wireless
 
+import "strings"
+
 // This file contains components from github.com/brlbil/wpaclient
 //
 // Copyright (c) 2017 Birol Bilgin
@@ -24,12 +26,21 @@ package wireless
 
 // NewNamedNetwork will create a new network with the given parameters
 func NewNamedNetwork(name, ssid, psk string) Network {
-	return Network{IDStr: name, SSID: ssid, PSK: psk}
+	n := Network{IDStr: name, SSID: ssid, PSK: psk}
+	if psk == "" {
+		n.KeyMgmt = "NONE"
+	}
+	return n
 }
 
 // NewNetwork will create a new network with the given parameters
 func NewNetwork(ssid, psk string) Network {
 	return NewNamedNetwork(ssid, ssid, psk)
+}
+
+// NewOpenNetwork will return a new open network
+func NewOpenNetwork(ssid string) Network {
+	return NewNamedNetwork(ssid, ssid, "")
 }
 
 // NewDisabledNetwork will create a new disabled network with the given parameters
@@ -114,7 +125,7 @@ func (net *Network) populateAttrs(cl attributeGetter) error {
 }
 
 // Disable or enabled the network
-func (net Network) Disable(on bool) {
+func (net *Network) Disable(on bool) {
 	var idx int
 	var found bool
 	for i, f := range net.Flags {
@@ -169,29 +180,46 @@ func (nets Networks) FindCurrent() (Network, bool) {
 	return Network{}, false
 }
 
-func setCmds(net Network) [][]string {
-	cmds := [][]string{}
-	cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "ssid", quote(net.SSID)})
-	if net.IDStr != "" {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "id_str", quote(net.IDStr)})
+// Attributes return the attributes of the network as a list of strings,
+// with the ability to set the separator or indentation
+func (net Network) Attributes(sep, indent string) []string {
+	lines := []string{}
+
+	lines = append(lines, indent+"ssid"+sep+quote(net.SSID))
+	if net.PSK != "" {
+		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
+	}
+
+	if net.IsDisabled() {
+		lines = append(lines, indent+"disabled"+sep+"1")
 	}
 
 	if net.ScanSSID {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "scan_ssid", "1'"})
+		lines = append(lines, indent+"scan_ssid"+sep+"1")
 	}
 
-	for _, f := range net.Flags {
-		switch f {
-		case "DISABLED":
-			cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "disabled", "1"})
-		}
+	switch {
+	case net.KeyMgmt == "" && net.PSK == "":
+		lines = append(lines, indent+"key_mgmt"+sep+"NONE")
+
+	case net.KeyMgmt != "":
+		lines = append(lines, indent+"key_mgmt"+sep+net.KeyMgmt)
 	}
 
-	if net.PSK == "" {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "key_mgmt", "None"})
-	} else {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "psk", quote(net.PSK)})
+	return lines
+}
+
+func setCmds(net Network) []string {
+
+	cmds := []string{}
+
+	for _, attr := range net.Attributes(" ", "") {
+		cmds = append(cmds, setCmdJoin(net.ID, attr))
 	}
 
 	return cmds
+}
+
+func setCmdJoin(idx int, bits ...string) string {
+	return strings.Join(append([]string{CmdSetNetwork, itoa(idx)}, bits...), " ")
 }

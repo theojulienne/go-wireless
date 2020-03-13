@@ -172,7 +172,7 @@ func (cl *Client) UpdateNetwork(net Network) (Network, error) {
 	}
 
 	for _, cmd := range setCmds(net) {
-		if err := cl.conn.SendCommandBool(cmd...); err != nil {
+		if err := cl.conn.SendCommandBool(cmd); err != nil {
 			return net, err
 		}
 	}
@@ -194,7 +194,7 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 	}
 
 	for _, cmd := range setCmds(net) {
-		if err := cl.conn.SendCommandBool(cmd...); err != nil {
+		if err := cl.conn.SendCommandBool(cmd); err != nil {
 			return net, err
 		}
 	}

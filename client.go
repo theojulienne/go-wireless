@@ -151,7 +151,7 @@ func (cl *Client) UpdateNetwork(net Network) (Network, error) {
 		return net, ErrNoIdentifier
 	}
 
-	for _, cmd := range net.SetCmds() {
+	for _, cmd := range setCmds(net) {
 		if err := cl.conn.SendCommandBool(cmd...); err != nil {
 			return net, err
 		}
@@ -173,7 +173,7 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 		net.IDStr = net.SSID
 	}
 
-	for _, cmd := range net.SetCmds() {
+	for _, cmd := range setCmds(net) {
 		if err := cl.conn.SendCommandBool(cmd...); err != nil {
 			return net, err
 		}

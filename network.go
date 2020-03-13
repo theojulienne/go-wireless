@@ -105,34 +105,6 @@ func (net Network) Connect(cl Connector) error {
 	return cl.Connect(net)
 }
 
-// SetCmds will generate the set_network commands to run to set this network up in
-func (net Network) SetCmds() [][]string {
-	cmds := [][]string{}
-	cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "ssid", quote(net.SSID)})
-	if net.IDStr != "" {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "id_str", quote(net.IDStr)})
-	}
-
-	if net.ScanSSID {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "scan_ssid", "1'"})
-	}
-
-	for _, f := range net.Flags {
-		switch f {
-		case "DISABLED":
-			cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "disabled", "1"})
-		}
-	}
-
-	if net.PSK == "" {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "key_mgmt", "None"})
-	} else {
-		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "psk", quote(net.PSK)})
-	}
-
-	return cmds
-}
-
 // Networks models a collection of networks
 type Networks []Network
 
@@ -167,4 +139,31 @@ func (nets Networks) FindCurrent() (Network, bool) {
 	}
 
 	return Network{}, false
+}
+
+func setCmds(net Network) [][]string {
+	cmds := [][]string{}
+	cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "ssid", quote(net.SSID)})
+	if net.IDStr != "" {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "id_str", quote(net.IDStr)})
+	}
+
+	if net.ScanSSID {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "scan_ssid", "1'"})
+	}
+
+	for _, f := range net.Flags {
+		switch f {
+		case "DISABLED":
+			cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "disabled", "1"})
+		}
+	}
+
+	if net.PSK == "" {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "key_mgmt", "None"})
+	} else {
+		cmds = append(cmds, []string{CmdSetNetwork, itoa(net.ID), "psk", quote(net.PSK)})
+	}
+
+	return cmds
 }

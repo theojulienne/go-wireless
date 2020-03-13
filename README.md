@@ -42,7 +42,7 @@ fmt.Println(aps, err)
 ap, ok := wireless.APs(aps).FindBySSID("CIA Predator Drone 237A")
 ```
 
-Get a list of known networks:
+Get a list of known networks (**note:** the password cannot be retrieved so are not populated):
 
 ```golang
 nets, err := wc.Networks()

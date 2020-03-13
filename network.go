@@ -52,6 +52,8 @@ func NewDisabledNetwork(ssid, psk string) Network {
 
 // Network represents a known network
 type Network struct {
+	Known bool `json:"known"`
+
 	ID       int      `json:"id"`
 	IDStr    string   `json:"id_str"`
 	KeyMgmt  string   `json:"key_mgmt"`
@@ -186,7 +188,11 @@ func (net Network) Attributes(sep, indent string) []string {
 	lines := []string{}
 
 	lines = append(lines, indent+"ssid"+sep+quote(net.SSID))
-	if net.PSK != "" {
+	switch {
+	case net.Known && net.PSK != "":
+		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
+	case net.Known:
+	case net.PSK != "":
 		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
 	}
 

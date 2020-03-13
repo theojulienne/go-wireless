@@ -110,6 +110,7 @@ func (cl *Client) Networks() (nets Networks, err error) {
 	}
 
 	for i := range nets {
+		nets[i].Known = true
 		(&nets[i]).populateAttrs(cl)
 	}
 
@@ -199,6 +200,7 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 		}
 	}
 
+	net.Known = true
 	return net, nil
 }
 

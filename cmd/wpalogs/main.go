@@ -1,15 +1,23 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/theojulienne/go-wireless"
 )
 
 func main() {
-	iface, ok := wireless.DefaultInterface()
-	if !ok {
-		panic("no wifi cards on the system")
+	var iface string
+	flag.StringVar(&iface, "i", "", "interface to use")
+	flag.Parse()
+
+	if iface == "" {
+		var ok bool
+		iface, ok = wireless.DefaultInterface()
+		if !ok {
+			panic("no wifi cards on the system")
+		}
 	}
 	fmt.Printf("Using interface: %s\n", iface)
 

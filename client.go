@@ -56,7 +56,7 @@ func (cl *Client) Status() (State, error) {
 }
 
 // Scan will scan for networks and return the APs it finds
-func (cl *Client) Scan() (nets []AP, err error) {
+func (cl *Client) Scan() (nets APs, err error) {
 	err = cl.conn.SendCommandBool(CmdScan)
 	if err != nil {
 		return
@@ -88,7 +88,7 @@ func (cl *Client) Scan() (nets []AP, err error) {
 }
 
 // Networks lists the known networks
-func (cl *Client) Networks() (nets []Network, err error) {
+func (cl *Client) Networks() (nets Networks, err error) {
 	data, err := cl.conn.SendCommand(CmdListNetworks)
 	if err != nil {
 		return nil, err

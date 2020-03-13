@@ -8,14 +8,17 @@ import (
 )
 
 func main() {
-	var sysfs bool
+	var sysfs, wpa bool
 	flag.BoolVar(&sysfs, "s", false, "find wireless interfaces by SysFS")
+	flag.BoolVar(&wpa, "w", false, "find wireless interfaces by open WPA sockets")
 	flag.Parse()
 
 	var ifaces []string
 	switch {
 	case sysfs:
-		ifaces = wireless.SysFSInterfaces()
+		ifaces = wireless.InterfacesFromSysfs()
+	case wpa:
+		ifaces = wireless.InterfacesFromWPARunDir()
 	default:
 		ifaces = wireless.Interfaces()
 	}

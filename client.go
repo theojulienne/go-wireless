@@ -2,14 +2,24 @@ package wireless
 
 import (
 	"errors"
+	"io"
 	"strconv"
 	"strings"
 	"time"
 )
 
+// WPAConn is an interface to the connection
+type WPAConn interface {
+	SendCommand(...string) (string, error)
+	SendCommandBool(...string) error
+	SendCommandInt(...string) (int, error)
+	io.Closer
+	Subscribe(...string) *Subscription
+}
+
 // Client represents a wireless client
 type Client struct {
-	conn *Conn
+	conn WPAConn
 }
 
 // NewClient will create a new client by connecting to the
@@ -25,7 +35,7 @@ func NewClient(iface string) (c *Client, err error) {
 }
 
 // NewClientFromConn returns a new client from an already established connection
-func NewClientFromConn(conn *Conn) (c *Client) {
+func NewClientFromConn(conn WPAConn) (c *Client) {
 	c.conn = conn
 	return
 }
@@ -37,7 +47,7 @@ func (cl *Client) Close() {
 
 // Conn will return the underlying connection
 func (cl *Client) Conn() *Conn {
-	return cl.conn
+	return cl.conn.(*Conn)
 }
 
 // Subscribe will subscribe to certain events that happen in WPA

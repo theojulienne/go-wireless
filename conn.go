@@ -44,9 +44,9 @@ func (c *Conn) WithLogOutput(w io.Writer) {
 }
 
 // Close will close the connection to the WPA control interface
-func (c *Conn) Close() {
+func (c *Conn) Close() error {
 	c.conn.Close()
-	os.Remove(c.lsockname)
+	return os.Remove(c.lsockname)
 }
 
 func (c *Conn) listen() {

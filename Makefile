@@ -8,6 +8,7 @@ build:
 	go build -o bin/wpalogs ./cmd/wpalogs
 	go build -o bin/wpaspy ./cmd/wpaspy
 	go build -o bin/wifistate ./cmd/wifistate
+	go build -o bin/ifaces ./cmd/ifaces
 
 test:
 	go test ./... -race

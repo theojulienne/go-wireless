@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -21,17 +23,24 @@ type Conn struct {
 	currentCommandResponse chan string
 
 	subs []*Subscription
+	log  *log.Logger
 }
 
 // Dial will dial the WPA control interface with the given
 // interface name
 func Dial(iface string) (*Conn, error) {
-	c := &Conn{Interface: iface}
+	c := &Conn{Interface: iface, log: log.New(ioutil.Discard, "", log.LstdFlags)}
 	err := c.init()
 	if err != nil {
 		return nil, err
 	}
 	return c, nil
+}
+
+// WithLogOutput will set the log output of the connection.  By default it is
+// set to ioutil.Discard
+func (c *Conn) WithLogOutput(w io.Writer) {
+	c.log.SetOutput(w)
 }
 
 // Close will close the connection to the WPA control interface
@@ -51,7 +60,7 @@ func (c *Conn) listen() {
 func (c *Conn) processMessage(bytesRead int, data []byte, err error) {
 	if err != nil {
 		if !IsUseOfClosedNetworkConnectionError(err) {
-			log.Println("Error:", err)
+			c.log.Println("Error:", err)
 		}
 		return
 	}
@@ -66,7 +75,7 @@ func (c *Conn) processMessage(bytesRead int, data []byte, err error) {
 	if strings.Index(msg, "<3>CTRL-") == 0 {
 		ev, err = NewEventFromMsg(msg)
 		if err != nil {
-			log.Println("Error:", err)
+			c.log.Println("Error:", err)
 			return
 		}
 	} else {
@@ -94,7 +103,7 @@ func (c *Conn) init() error {
 		return err
 	}
 
-	log.Println("Local addr: ", c.conn.LocalAddr())
+	c.log.Println("Local addr: ", c.conn.LocalAddr())
 
 	c.currentCommandResponse = make(chan string, 1)
 
@@ -117,7 +126,7 @@ func (c *Conn) SendCommand(command ...string) (string, error) {
 
 // SendCommandWithContext will send the command with a context
 func (c *Conn) SendCommandWithContext(ctx context.Context, command ...string) (string, error) {
-	log.Println("<<<", command)
+	c.log.Println("<<<", command)
 	_, err := c.conn.Write([]byte(strings.Join(command, " ")))
 	if err != nil {
 		return "", err
@@ -126,7 +135,7 @@ func (c *Conn) SendCommandWithContext(ctx context.Context, command ...string) (s
 	for {
 		select {
 		case resp := <-c.currentCommandResponse:
-			log.Println(">>>", resp)
+			c.log.Println(">>>", resp)
 			return resp, nil
 		case <-ctx.Done():
 			return "", ErrCmdTimeout

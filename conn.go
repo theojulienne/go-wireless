@@ -24,6 +24,8 @@ type Conn struct {
 
 	subs []*Subscription
 	log  *log.Logger
+
+	quit chan bool
 }
 
 // Dial will dial the WPA control interface with the given
@@ -45,6 +47,7 @@ func (c *Conn) WithLogOutput(w io.Writer) {
 
 // Close will close the connection to the WPA control interface
 func (c *Conn) Close() error {
+	close(c.quit)
 	c.conn.Close()
 	return os.Remove(c.lsockname)
 }
@@ -52,8 +55,13 @@ func (c *Conn) Close() error {
 func (c *Conn) listen() {
 	buf := make([]byte, 2048)
 	for {
-		bytesRead, err := c.conn.Read(buf)
-		c.processMessage(bytesRead, buf, err)
+		select {
+		case <-c.quit:
+			return
+		default:
+			bytesRead, err := c.conn.Read(buf)
+			c.processMessage(bytesRead, buf, err)
+		}
 	}
 }
 
@@ -106,6 +114,7 @@ func (c *Conn) init() error {
 	c.log.Println("Local addr: ", c.conn.LocalAddr())
 
 	c.currentCommandResponse = make(chan string, 1)
+	c.quit = make(chan bool)
 
 	go c.listen()
 

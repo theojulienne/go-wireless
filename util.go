@@ -3,6 +3,7 @@ package wireless
 import (
 	"bytes"
 	"encoding/csv"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -22,6 +23,9 @@ func parseNetwork(b []byte) ([]Network, error) {
 
 	recs, err := r.ReadAll()
 	if err != nil {
+		if len(b) >= CONN_MAX_LISTEN_BUFF-i {
+			err = errors.Wrap(err, fmt.Sprintf("list too long: %d B", len(b)+(i)))
+		}
 		return nil, err
 	}
 
@@ -67,6 +71,9 @@ func parseAP(b []byte) ([]AP, error) {
 
 	recs, err := r.ReadAll()
 	if err != nil {
+		if len(b) >= CONN_MAX_LISTEN_BUFF-i {
+			err = errors.Wrap(err, fmt.Sprintf("list too long: %d B", len(b)+(i)))
+		}
 		return nil, err
 	}
 

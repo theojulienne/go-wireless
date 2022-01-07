@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/theojulienne/go-wireless/api"
+	"github.com/plantiga/go-wireless/api"
 )
 
 func main() {

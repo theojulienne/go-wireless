@@ -1,6 +1,6 @@
 # go-wireless
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/theojulienne/go-wireless)](https://goreportcard.com/report/github.com/theojulienne/go-wireless) [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/theojulienne/go-wireless) ![Go](https://github.com/theojulienne/go-wireless/workflows/Go/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/plantiga/go-wireless)](https://goreportcard.com/report/github.com/plantiga/go-wireless) [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/theojulienne/go-wireless) ![Go](https://github.com/plantiga/go-wireless/workflows/Go/badge.svg)
 
 A way to interact with the Wireless interfaces on a Linux machine using WPA Supplicant.
 

@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/theojulienne/go-wireless"
+	"github.com/plantiga/go-wireless"
 )
 
 func notImplemented(c *gin.Context) {

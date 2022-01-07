@@ -20,6 +20,7 @@ func parseNetwork(b []byte) ([]Network, error) {
 	r := csv.NewReader(bytes.NewReader(b))
 	r.Comma = '\t'
 	r.FieldsPerRecord = 4
+	r.LazyQuotes = true
 
 	recs, err := r.ReadAll()
 	if err != nil {
@@ -72,6 +73,7 @@ func parseAP(b []byte) ([]AP, error) {
 	r := csv.NewReader(bytes.NewReader(b))
 	r.Comma = '\t'
 	r.FieldsPerRecord = 5
+	r.LazyQuotes = true
 
 	recs, err := r.ReadAll()
 	if err != nil {

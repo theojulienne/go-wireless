@@ -16,4 +16,4 @@ jobs:
         go-version: 1.17
 
     - name: Test
-      run: go test -v $(go list ./... | grep -v ./cmd/) 
+      run: go test -v ./...

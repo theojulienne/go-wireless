@@ -35,10 +35,14 @@ func parseNetwork(b []byte) ([]Network, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "parse id")
 		}
+		ssid, err := DecodeSsid(rec[1])
+		if err != nil {
+			return nil, errors.Wrap(err, "parse ssid")
+		}
 
 		nts = append(nts, Network{
 			ID:    id,
-			SSID:  rec[1],
+			SSID:  ssid,
 			BSSID: rec[2],
 			Flags: parseFlags(rec[3]),
 		})
@@ -94,9 +98,14 @@ func parseAP(b []byte) ([]AP, error) {
 			return nil, errors.Wrap(err, "parse signal strength")
 		}
 
+		ssid, err := DecodeSsid(rec[4])
+		if err != nil {
+			return nil, errors.Wrap(err, "parse ssid")
+		}
+
 		aps = append(aps, AP{
 			BSSID:     bssid,
-			SSID:      rec[4],
+			SSID:      ssid,
 			Frequency: fr,
 			Signal:    ss,
 			Flags:     parseFlags(rec[3]),

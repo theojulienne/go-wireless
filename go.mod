@@ -1,4 +1,4 @@
-module github/go-wireless
+module github.com/Plantiga/go-wireless
 
 go 1.16
 

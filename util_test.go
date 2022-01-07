@@ -50,7 +50,7 @@ func TestParseAP(t *testing.T) {
 			})
 		})
 
-		SkipConvey("when quoted APs are parsed", func() {
+		Convey("when quoted APs are parsed", func() {
 			aps, err := parseAP(scanResultsQuote)
 			So(err, ShouldBeNil)
 
@@ -107,7 +107,7 @@ func TestParseNetwork(t *testing.T) {
 			})
 		})
 
-		SkipConvey("when quoted networks are parsed", func() {
+		Convey("when quoted networks are parsed", func() {
 			nets, err := parseNetwork(networkListQuote)
 			So(err, ShouldBeNil)
 
@@ -132,9 +132,9 @@ d0:7a:b5:31:23:a0	2472	-30	[WPA2-PSK-CCMP][WPS][ESS]	AP0
 `)
 
 var scanResultsQuote = []byte(`bssid / frequency / signal level / flags / ssid
-d0:7a:b5:31:23:a0	2472	-30	[WPA2-PSK-CCMP][WPS][ESS]	AP0 "cool"
-00:1f:1f:37:42:d9	2442	-37	[WPA2-PSK-CCMP][ESS]	"AP1"
-24:00:ba:f8:65:df	2412	-77	[WPA-PSK-CCMP+TKIP][WPA2-PSK-CCMP+TKIP][WPS][ESS]	"AP2
+d0:7a:b5:31:23:a0	2472	-30	[WPA2-PSK-CCMP][WPS][ESS]	AP0 \"cool\"
+00:1f:1f:37:42:d9	2442	-37	[WPA2-PSK-CCMP][ESS]	\"AP1\"
+24:00:ba:f8:65:df	2412	-77	[WPA-PSK-CCMP+TKIP][WPA2-PSK-CCMP+TKIP][WPS][ESS]	\"AP2
 `)
 
 var networkList = []byte(`network id / ssid / bssid / flags
@@ -143,6 +143,6 @@ var networkList = []byte(`network id / ssid / bssid / flags
 2	AP2	any	[DISABLED]`)
 
 var networkListQuote = []byte(`network id / ssid / bssid / flags
-0	AP0 "cool"	any	
-1	"AP1"	any	[DISABLED]
-2	"AP2	any	[DISABLED]`)
+0	AP0 \"cool\"	any	
+1	\"AP1\"	any	[DISABLED]
+2	\"AP2	any	[DISABLED]`)

@@ -6,6 +6,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Decode a configuration value returned from wpa_supplicant.
+// wpa_supplicant understands values in 3 formats:
+// Raw string, wrapped in quotes:
+//  "this is config"
+// `printf`-encoded string, wrapped in quotes and starting with `P`:
+//  P"config with special char: \t"
+// Hex-encoded, without quotes:
+//  656e636f646564
 // https://github.com/digsrc/wpa_supplicant/blob/515eb37dd1df3f4a05fc2a31c265db6358301988/src/utils/common.c#L631-L685
 func configParseString(s string) (string, error) {
 	l := len(s)
@@ -29,7 +37,10 @@ func configParseString(s string) (string, error) {
 	}
 }
 
-func isHex(s string) bool {
+// Determine if a string contains a "special character", as defined by wpa_supplicant,
+// such that it should be encoded as a hex-string rather than literal string.
+// https://github.com/digsrc/wpa_supplicant/blob/515eb37dd1df3f4a05fc2a31c265db6358301988/src/utils/common.c#L688-L697
+func shouldHexEncode(s string) bool {
 	for _, c := range s {
 		if c < 32 || c >= 127 {
 			return true
@@ -38,9 +49,10 @@ func isHex(s string) bool {
 	return false
 }
 
+// Encode a string for saving or sending to wpa_supplicant configuration
 // https://github.com/digsrc/wpa_supplicant/blob/515eb37dd1df3f4a05fc2a31c265db6358301988/wpa_supplicant/config.c#L147-L156
 func configWriteString(s string) string {
-	if isHex(s) {
+	if shouldHexEncode(s) {
 		return hex.EncodeToString([]byte(s))
 	} else {
 		return quote(s)

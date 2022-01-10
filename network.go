@@ -93,13 +93,21 @@ func (net *Network) populateAttrs(cl attributeGetter) error {
 	if err != nil {
 		return err
 	}
-	net.SSID = unquote(v)
+	v, err = configParseString(v)
+	if err != nil {
+		return err
+	}
+	net.SSID = v
 
 	v, err = cl.GetNetworkAttr(net.ID, "id_str")
 	if err != nil {
 		return err
 	}
-	net.IDStr = unquote(v)
+	v, err = configParseString(v)
+	if err != nil {
+		return err
+	}
+	net.IDStr = v
 
 	v, err = cl.GetNetworkAttr(net.ID, "key_mgmt")
 	if err != nil {
@@ -187,13 +195,13 @@ func (nets Networks) FindCurrent() (Network, bool) {
 func (net Network) Attributes(sep, indent string) []string {
 	lines := []string{}
 
-	lines = append(lines, indent+"ssid"+sep+quote(net.SSID))
+	lines = append(lines, indent+"ssid"+sep+configWriteString(net.SSID))
 	switch {
 	case net.Known && net.PSK != "":
-		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
+		lines = append(lines, indent+"psk"+sep+configWriteString(net.PSK))
 	case net.Known:
 	case net.PSK != "":
-		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
+		lines = append(lines, indent+"psk"+sep+configWriteString(net.PSK))
 	}
 
 	if net.IsDisabled() {

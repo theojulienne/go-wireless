@@ -21,7 +21,7 @@ type State struct {
 func NewState(data string) State {
 	s := State{}
 	for _, l := range strings.Split(data, "\n") {
-		bits := strings.Split(strings.TrimSpace(l), "=")
+		bits := strings.SplitN(strings.TrimSpace(l), "=", 2)
 		if len(bits) < 2 {
 			continue
 		}
@@ -30,12 +30,16 @@ func NewState(data string) State {
 		case "bssid":
 			s.BSSID = bits[1]
 		case "ssid":
-			s.SSID = bits[1]
+			v, err := DecodeSsid(bits[1])
+			if err != nil {
+				continue
+			}
+			s.SSID = v
 		case "id":
 			s.ID = bits[1]
 		case "mode":
 			s.Mode = bits[1]
-		case "key_management":
+		case "key_mgmt":
 			s.KeyManagement = bits[1]
 		case "wpa_state":
 			s.WpaState = bits[1]

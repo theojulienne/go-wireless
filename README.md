@@ -68,7 +68,8 @@ net, err := wc.UpdateNetwork(net)
 Subscribe to events:
 
 ```golang
-sub := wc.Subscribe(wireless.EventConnected, wireless.EventAuthReject, wireless.EventDisconnected)
+conn, _ := wireless.Dial("wlp2s0")
+sub := conn.Subscribe(wireless.EventConnected, wireless.EventAuthReject, wireless.EventDisconnected)
 
 ev := <-sub.Next()
 switch ev.Name {

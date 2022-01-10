@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 // Interfaces is a shortcut to the best known method for gathering the wireless
@@ -30,10 +31,11 @@ func InterfacesFromWPARunDir(basePath ...string) []string {
 	if len(basePath) > 0 {
 		base = basePath[0]
 	}
-
-	matches, _ := filepath.Glob(path.Join(base, "*"))
+	matches, _ := os.ReadDir(base)
 	for _, iface := range matches {
-		s = append(s, path.Base(iface))
+		if !strings.HasPrefix(iface.Name(), "p2p") {
+			s = append(s, iface.Name())
+		}
 	}
 
 	return s

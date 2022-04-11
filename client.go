@@ -19,7 +19,8 @@ type WPAConn interface {
 
 // Client represents a wireless client
 type Client struct {
-	conn WPAConn
+	conn        WPAConn
+	ScanTimeout time.Duration
 }
 
 // NewClient will create a new client by connecting to the
@@ -67,6 +68,12 @@ func (cl *Client) Status() (State, error) {
 
 // Scan will scan for networks and return the APs it finds
 func (cl *Client) Scan() (nets APs, err error) {
+	timeout := cl.ScanTimeout
+
+	if timeout == 0 {
+		timeout = 2 * time.Second
+	}
+
 	err = cl.conn.SendCommandBool(CmdScan)
 	if err != nil {
 		return
@@ -83,7 +90,7 @@ func (cl *Client) Scan() (nets APs, err error) {
 				return
 			case <-results.Next():
 				return
-			case <-time.NewTimer(time.Second * 2).C:
+			case <-time.NewTimer(cl.ScanTimeout).C:
 				return
 			}
 		}

@@ -36,6 +36,7 @@ func NewClient(iface string) (c *Client, err error) {
 
 // NewClientFromConn returns a new client from an already established connection
 func NewClientFromConn(conn WPAConn) (c *Client) {
+	c = new(Client)
 	c.conn = conn
 	return
 }

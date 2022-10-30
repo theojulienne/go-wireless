@@ -414,7 +414,7 @@ func NewEventFromMsg(msg string) (Event, error) {
 
 	event := Event{Name: parts[0][3:], Arguments: make(map[string]string)}
 	for _, record := range parts[1:] {
-		if strings.Index(record, "=") != -1 {
+		if strings.Contains(record, "=") {
 			nvs := strings.SplitN(record, "=", 2)
 			event.Arguments[nvs[0]] = nvs[1]
 		}

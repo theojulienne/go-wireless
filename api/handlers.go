@@ -23,13 +23,16 @@ func listAccesPoints(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 		c.AbortWithStatusJSON(500, json(err))
+		return
 	}
 	defer wc.Close()
+	wc.ScanTimeout = 3
 
 	aps, err := wc.Scan()
 	if err != nil {
 		c.Error(err)
 		c.AbortWithStatusJSON(500, json(err))
+		return
 	}
 
 	c.JSON(200, aps)

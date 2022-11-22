@@ -88,7 +88,7 @@ func parseAP(b []byte) ([]AP, error) {
 		}
 
 		aps = append(aps, AP{
-			BSSID:     bssid,
+			BSSID:     bssid.String(),
 			SSID:      rec[4],
 			Frequency: fr,
 			Signal:    ss,

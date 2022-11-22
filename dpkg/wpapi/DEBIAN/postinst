@@ -1,0 +1,6 @@
+#!/bin/bash
+
+deb-systemd-invoke enable wpapi
+deb-systemd-invoke start wpapi
+
+exit 0;

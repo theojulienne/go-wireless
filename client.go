@@ -83,6 +83,9 @@ func (cl *Client) Scan() (nets APs, err error) {
 	results := cl.conn.Subscribe(EventScanResults)
 	failed := cl.conn.Subscribe(EventScanFailed)
 
+	defer results.Unsubscribe()
+	defer failed.Unsubscribe()
+
 	func() {
 		for {
 			select {

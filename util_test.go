@@ -24,7 +24,7 @@ func TestParseAP(t *testing.T) {
 				So(a.Flags, ShouldContain, "WPS")
 				So(a.Flags, ShouldContain, "ESS")
 				So(a.Flags, ShouldContain, "WPA2-PSK-CCMP")
-				So(a.BSSID.String(), ShouldEqual, "d0:7a:b5:31:23:a0")
+				So(a.BSSID, ShouldEqual, "d0:7a:b5:31:23:a0")
 			})
 
 			Convey("then it should have AP2 last", func() {
@@ -36,7 +36,7 @@ func TestParseAP(t *testing.T) {
 				So(a.Flags, ShouldContain, "ESS")
 				So(a.Flags, ShouldContain, "WPA2-PSK-CCMP+TKIP")
 				So(a.Flags, ShouldContain, "WPA-PSK-CCMP+TKIP")
-				So(a.BSSID.String(), ShouldEqual, "24:00:ba:f8:65:df")
+				So(a.BSSID, ShouldEqual, "24:00:ba:f8:65:df")
 			})
 		})
 	})

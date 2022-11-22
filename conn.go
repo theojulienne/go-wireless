@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const CONN_MAX_LISTEN_BUFF = 3 * 1024 // Allow 3kB of buffer for listening to events
+
 // Conn represents a connection to a WPA supplicant control interface
 type Conn struct {
 	Interface string
@@ -53,7 +55,7 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) listen() {
-	buf := make([]byte, 2048)
+	buf := make([]byte, CONN_MAX_LISTEN_BUFF)
 	for {
 		select {
 		case <-c.quit:

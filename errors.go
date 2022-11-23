@@ -19,6 +19,7 @@ var (
 	ErrAssocRejected = errors.New("assocation rejected")
 	ErrNoIdentifier  = errors.New("no id_str field found")
 	ErrInvalidEvent  = errors.New("invalid event message")
+	ErrFailBusy      = errors.New("FAIL-BUSY")
 )
 
 // IsUseOfClosedNetworkConnectionError will return true if the error is about use of

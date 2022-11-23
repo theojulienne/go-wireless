@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"strconv"
@@ -15,6 +16,10 @@ import (
 )
 
 const CONN_MAX_LISTEN_BUFF = 3 * 1024 // Allow 3kB of buffer for listening to events
+
+func init() {
+	rand.Seed(time.Now().Unix())
+}
 
 // Conn represents a connection to a WPA supplicant control interface
 type Conn struct {
@@ -102,7 +107,7 @@ func (c *Conn) init() error {
 		return err
 	}
 
-	c.lsockname = fmt.Sprintf("/tmp/wpa_ctrl_%d", os.Getpid())
+	c.lsockname = fmt.Sprintf("/tmp/wpa_ctrl_%d_%d", os.Getpid(), rand.Intn(10000))
 	laddr, err := net.ResolveUnixAddr("unixgram", c.lsockname)
 	if err != nil {
 		return err
@@ -163,7 +168,7 @@ func (c *Conn) SendCommandBool(command ...string) error {
 		return err
 	}
 	if resp != "OK\n" {
-		return errors.New(resp)
+		return errors.New(strings.TrimSpace(resp))
 	}
 	return nil
 }

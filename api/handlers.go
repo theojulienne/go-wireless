@@ -71,3 +71,81 @@ func listNetworks(c *gin.Context) {
 
 	c.JSON(200, nets)
 }
+
+func getInterface(c *gin.Context) {
+	iface := c.Param("iface")
+
+	wc, err := wireless.NewClient(iface)
+	if err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(errStatus(err), json(err))
+		return
+	}
+	defer wc.Close()
+
+	state, err := wc.Status()
+	if err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(errStatus(err), json(err))
+		return
+	}
+
+	c.JSON(200, state)
+}
+
+func addNetwork(c *gin.Context) {
+	iface := c.Param("iface")
+
+	disable := false
+	if v, ok := c.GetQuery("disable"); ok && v == "1" {
+		disable = true
+	}
+	if v, ok := c.GetQuery("disabled"); ok && v == "1" {
+		disable = true
+	}
+
+	connect := false
+	if v, ok := c.GetQuery("connect"); ok && v == "1" {
+		connect = true
+	}
+	if v, ok := c.GetQuery("connected"); ok && v == "1" {
+		connect = true
+	}
+
+	wc, err := wireless.NewClient(iface)
+	if err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(errStatus(err), json(err))
+		return
+	}
+	defer wc.Close()
+
+	var nw wireless.Network
+	if err := c.BindJSON(&nw); err != nil {
+		c.AbortWithStatusJSON(400, json(err))
+		return
+	}
+
+	if connect {
+		disable = false
+	}
+	nw.Disable(disable)
+
+	newNet, err := wc.AddNetwork(nw)
+	if err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(errStatus(err), json(err))
+		return
+	}
+
+	if connect {
+		newNet, err = wc.Connect(newNet)
+		if err != nil {
+			c.Error(err)
+			c.AbortWithStatusJSON(errStatus(err), json(err))
+			return
+		}
+	}
+
+	c.JSON(200, newNet)
+}

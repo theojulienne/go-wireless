@@ -194,6 +194,13 @@ func (cl *Client) UpdateNetwork(net Network) (Network, error) {
 
 // AddNetwork will add a new network
 func (cl *Client) AddNetwork(net Network) (Network, error) {
+	nets, err := cl.Networks()
+	if err == nil {
+		if nw, found := nets.FindBySSID(net.SSID); found {
+			return nw, nil
+		}
+	}
+
 	i, err := cl.conn.SendCommandInt(CmdAddNetwork)
 	if err != nil {
 		return net, err

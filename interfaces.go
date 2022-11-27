@@ -10,6 +10,7 @@ import (
 // Interfaces is a shortcut to the best known method for gathering the wireless
 // interfaces from the current system
 var Interfaces = InterfacesFromWPARunDir
+var DefaultCtrlDir = "/var/run/wpa_supplicant"
 
 // DefaultInterface will return the default wireless interface, being the first
 // one returned from the Interfaces method
@@ -27,7 +28,7 @@ func DefaultInterface() (string, bool) {
 // however a different run directory can be specified as the basePath parameter
 func InterfacesFromWPARunDir(basePath ...string) []string {
 	s := []string{}
-	base := "/var/run/wpa_supplicant"
+	base := DefaultCtrlDir
 	if len(basePath) > 0 {
 		base = basePath[0]
 	}

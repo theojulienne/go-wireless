@@ -205,13 +205,13 @@ func (net Network) Attributes(sep, indent string) []string {
 		lines = append(lines, indent+"scan_ssid"+sep+"1")
 	}
 
-	switch {
-	case net.KeyMgmt == "" && net.PSK == "":
-		lines = append(lines, indent+"key_mgmt"+sep+"NONE")
+	// switch {
+	// case net.KeyMgmt == "" && net.PSK == "":
+	// 	lines = append(lines, indent+"key_mgmt"+sep+"NONE")
 
-	case net.KeyMgmt != "":
-		lines = append(lines, indent+"key_mgmt"+sep+net.KeyMgmt)
-	}
+	// case net.KeyMgmt != "":
+	// 	lines = append(lines, indent+"key_mgmt"+sep+net.KeyMgmt)
+	// }
 
 	return lines
 }

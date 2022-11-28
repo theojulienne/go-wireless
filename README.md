@@ -19,7 +19,20 @@ You will probably also need to be running as root unless you are in the specifie
 
 # Usage
 
-Examples of the usage can be found in the `cmd` directory as standalone commands.
+There are two main objects to interact with:
+
+* `Conn` - allows running arbitrary commands and listening to events
+* `Client` - uses `Conn` to do things for you like scanning for and connecting to APs
+
+Examples of the usage can be found in the `cmd` directory as standalone commands:
+
+* `apscan` - similar to your `iwlist wlan0 scan`
+* `connectap` - connect to an access point
+* `currentap` - get the access point that is currently connected
+* `ifaces` - show the wireless interfaces
+* `wifistate` - dump the current wifi state as JSON
+* `wpalogs` - print logs as they happen
+* `wpapi` - an HTTP API that can scan and connect to APs
 
 Get a list of wifi cards attached:
 
@@ -65,7 +78,7 @@ net.Disable(true)
 net, err := wc.UpdateNetwork(net)
 ```
 
-Subscribe to events:
+Subscribe to events by getting a raw connection object:
 
 ```golang
 conn, _ := wireless.Dial("wlp2s0")
@@ -89,6 +102,36 @@ st, err := wc.Status()
 fmt.Printf("%+v\n", st)
 ```
 
+Use a timeout for scanning APs and general command timeouts:
+
+```golang
+wc.ScanTimeout = time.Second * 3
+wc.CmdTimeout = time.Second
+```
+
+You can also set a context to use for the latter instead:
+
+```golang
+ctx, cancel := context.WithTimeout(context.Background(), time.Second * 10)
+wc.WithContext(ctx)
+```
+
+However that may not be useful to you unless you have a shortlived client.  If you want to use a context for groups of operations you can give a closure:
+
+```golang
+wc.WithContext(ctx, func(wc *wireless.Client) {
+	err := wc.Disconnect()
+	err = wc.RemoveNetwork(0)
+	net := NewNetwork("DHS Stingray #27", "secretpass")
+	net, err := wc.Connect(net)
+})
+```
+
+Or if you want to use it for a single operation most have `*WithContext` alternatives:
+
+```golang
+wc.ConnectWithContext(ctx, net)
+```
 
 ## API
 

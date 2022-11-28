@@ -32,6 +32,7 @@ Examples of the usage can be found in the `cmd` directory as standalone commands
 * `ifaces` - show the wireless interfaces
 * `wifistate` - dump the current wifi state as JSON
 * `wpalogs` - print logs as they happen
+* `wpaspy` - print events as they happen
 * `wpapi` - an HTTP API that can scan and connect to APs
 
 Get a list of wifi cards attached:

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -104,6 +105,11 @@ func addNetwork(c *gin.Context) {
 		disable = true
 	}
 
+	force := false
+	if v, ok := c.GetQuery("force"); ok && v == "1" {
+		force = true
+	}
+
 	connect := false
 	if v, ok := c.GetQuery("connect"); ok && v == "1" {
 		connect = true
@@ -146,6 +152,13 @@ func addNetwork(c *gin.Context) {
 		newNet, err = wc.Connect(newNet)
 		if err != nil {
 			c.Error(err)
+
+			if err == wireless.ErrSSIDNotFound && force {
+				c.JSON(200, newNet)
+				return
+			}
+
+			wc.RemoveNetwork(newNet.ID)
 			c.AbortWithStatusJSON(errStatus(err), json(err))
 			return
 		}

@@ -1,8 +1,10 @@
 package wireless
 
 import (
+	"context"
 	"errors"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +15,9 @@ type WPAConn interface {
 	SendCommand(...string) (string, error)
 	SendCommandBool(...string) error
 	SendCommandInt(...string) (int, error)
+	SendCommandWithContext(context.Context, ...string) (string, error)
+	SendCommandBoolWithContext(context.Context, ...string) error
+	SendCommandIntWithContext(context.Context, ...string) (int, error)
 	io.Closer
 	Subscribe(...string) *Subscription
 }
@@ -21,6 +26,8 @@ type WPAConn interface {
 type Client struct {
 	conn        WPAConn
 	ScanTimeout time.Duration
+	CmdTimeout  time.Duration
+	ctx         context.Context
 }
 
 // NewClient will create a new client by connecting to the
@@ -31,7 +38,7 @@ func NewClient(iface string) (c *Client, err error) {
 	if err != nil {
 		return
 	}
-
+	c.CmdTimeout = time.Second
 	return
 }
 
@@ -42,9 +49,33 @@ func NewClientFromConn(conn WPAConn) (c *Client) {
 	return
 }
 
+func (cl *Client) getContext() (context.Context, func()) {
+	if cl.ctx != nil {
+		return cl.ctx, func() {}
+	}
+
+	return context.WithTimeout(context.Background(), cl.CmdTimeout)
+}
+
+func (cl *Client) WithContext(ctx context.Context, ops ...func(wc *Client)) {
+	if len(ops) == 0 {
+		cl.ctx = ctx
+		return
+	}
+
+	wc := NewClientFromConn(cl.conn)
+	wc.ctx = ctx
+	for _, op := range ops {
+		op(wc)
+	}
+}
+
 // Close will close the client connection
 func (cl *Client) Close() {
-	cl.conn.Close()
+	err := cl.conn.Close()
+	if err != nil {
+		log.Println("ERROR: client failed to close conn:", err)
+	}
 }
 
 // Conn will return the underlying connection
@@ -59,7 +90,9 @@ func (cl *Client) Subscribe(topics ...string) *Subscription {
 
 // Status will return the current state of the WPA
 func (cl *Client) Status() (State, error) {
-	data, err := cl.conn.SendCommand(CmdStatus)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	data, err := cl.conn.SendCommandWithContext(ctx, CmdStatus)
 	if err != nil {
 		return State{}, err
 	}
@@ -110,7 +143,13 @@ func (cl *Client) Scan() (nets APs, err error) {
 
 // Networks lists the known networks
 func (cl *Client) Networks() (nets Networks, err error) {
-	data, err := cl.conn.SendCommand(CmdListNetworks)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.NetworksWithContext(ctx)
+}
+
+func (cl *Client) NetworksWithContext(ctx context.Context) (nets Networks, err error) {
+	data, err := cl.conn.SendCommandWithContext(ctx, CmdListNetworks)
 	if err != nil {
 		return nil, err
 	}
@@ -128,63 +167,94 @@ func (cl *Client) Networks() (nets Networks, err error) {
 	return nets, nil
 }
 
-// Connect to a new or existing network
 func (cl *Client) Connect(net Network) (Network, error) {
-	net, err := cl.AddOrUpdateNetwork(net)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.ConnectWithContext(ctx, net)
+}
+
+// Connect to a new or existing network
+func (cl *Client) ConnectWithContext(ctx context.Context, net Network) (Network, error) {
+	net, err := cl.AddOrUpdateNetworkWithContext(ctx, net)
 	if err != nil {
 		return net, err
 	}
 
 	sub := cl.conn.Subscribe(EventNetworkNotFound, EventAuthReject, EventConnected, EventDisconnected, EventAssocReject)
-	if err := cl.EnableNetwork(net.ID); err != nil {
+	defer sub.Unsubscribe()
+
+	if err := cl.EnableNetworkWithContext(ctx, net.ID); err != nil {
 		return net, err
 	}
 
-	ev := <-sub.Next()
-
-	switch ev.Name {
-	case EventConnected:
-		return net, cl.SaveConfig()
-	case EventNetworkNotFound:
-		return net, ErrSSIDNotFound
-	case EventAuthReject:
-		return net, ErrAuthFailed
-	case EventDisconnected:
-		return net, ErrDisconnected
-	case EventAssocReject:
-		return net, ErrAssocRejected
+	if err := cl.conn.SendCommandBoolWithContext(ctx, "REASSOCIATE"); err != nil {
+		return net, err
 	}
 
-	return net, errors.New("failed to catch event " + ev.Name)
+	if err := cl.conn.SendCommandBoolWithContext(ctx, "RECONNECT"); err != nil {
+		return net, err
+	}
+
+	select {
+	case ev := <-sub.Next():
+		switch ev.Name {
+		case EventConnected:
+			return net, cl.SaveConfig()
+		case EventNetworkNotFound:
+			return net, ErrSSIDNotFound
+		case EventAuthReject:
+			return net, ErrAuthFailed
+		case EventDisconnected:
+			return net, ErrDisconnected
+		case EventAssocReject:
+			return net, ErrAssocRejected
+		default:
+			return net, errors.New("failed to catch event " + ev.Name)
+		}
+	case <-ctx.Done():
+		return net, ctx.Err()
+	}
 }
 
 // AddOrUpdateNetwork will add or, if the network has IDStr set, update it
 func (cl *Client) AddOrUpdateNetwork(net Network) (Network, error) {
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.AddNetworkWithContext(ctx, net)
+}
+
+func (cl *Client) AddOrUpdateNetworkWithContext(ctx context.Context, net Network) (Network, error) {
 	if net.IDStr != "" {
-		nets, err := cl.Networks()
+		nets, err := cl.NetworksWithContext(ctx)
 		if err != nil {
 			return net, err
 		}
 
 		for _, n := range nets {
 			if n.IDStr == net.IDStr {
-				return cl.UpdateNetwork(net)
+				return cl.UpdateNetworkWithContext(ctx, net)
 			}
 		}
 	}
 
-	return cl.AddNetwork(net)
+	return cl.AddNetworkWithContext(ctx, net)
 }
 
 // UpdateNetwork will update the given network, an error will be thrown
 // if the network doesn't have IDStr specified
 func (cl *Client) UpdateNetwork(net Network) (Network, error) {
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.UpdateNetworkWithContext(ctx, net)
+}
+
+func (cl *Client) UpdateNetworkWithContext(ctx context.Context, net Network) (Network, error) {
 	if net.IDStr == "" {
 		return net, ErrNoIdentifier
 	}
 
 	for _, cmd := range setCmds(net) {
-		if err := cl.conn.SendCommandBool(cmd); err != nil {
+		if err := cl.conn.SendCommandBoolWithContext(ctx, cmd); err != nil {
 			return net, err
 		}
 	}
@@ -194,6 +264,13 @@ func (cl *Client) UpdateNetwork(net Network) (Network, error) {
 
 // AddNetwork will add a new network
 func (cl *Client) AddNetwork(net Network) (Network, error) {
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.AddNetworkWithContext(ctx, net)
+}
+
+// AddNetwork will add a new network
+func (cl *Client) AddNetworkWithContext(ctx context.Context, net Network) (Network, error) {
 	nets, err := cl.Networks()
 	if err == nil {
 		if nw, found := nets.FindBySSID(net.SSID); found {
@@ -201,7 +278,7 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 		}
 	}
 
-	i, err := cl.conn.SendCommandInt(CmdAddNetwork)
+	i, err := cl.conn.SendCommandIntWithContext(ctx, CmdAddNetwork)
 	if err != nil {
 		return net, err
 	}
@@ -213,7 +290,7 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 	}
 
 	for _, cmd := range setCmds(net) {
-		if err := cl.conn.SendCommandBool(cmd); err != nil {
+		if err := cl.conn.SendCommandBoolWithContext(ctx, cmd); err != nil {
 			return net, err
 		}
 	}
@@ -224,32 +301,59 @@ func (cl *Client) AddNetwork(net Network) (Network, error) {
 
 // RemoveNetwork will RemoveNetwork
 func (cl *Client) RemoveNetwork(id int) error {
-	return cl.conn.SendCommandBool(CmdRemoveNetwork, strconv.Itoa(id))
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdRemoveNetwork, strconv.Itoa(id))
 }
 
 // EnableNetwork will EnableNetwork
 func (cl *Client) EnableNetwork(id int) error {
-	return cl.conn.SendCommandBool(CmdEnableNetwork + " " + strconv.Itoa(id))
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.EnableNetworkWithContext(ctx, id)
+}
+
+func (cl *Client) EnableNetworkWithContext(ctx context.Context, id int) error {
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdEnableNetwork, strconv.Itoa(id))
+}
+
+// Disconnect will Disconnect
+func (cl *Client) Disconnect() error {
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.DisconnectWithContext(ctx)
+}
+
+func (cl *Client) DisconnectWithContext(ctx context.Context) error {
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdDisconnect)
 }
 
 // DisableNetwork will DisableNetwork
 func (cl *Client) DisableNetwork(id int) error {
-	return cl.conn.SendCommandBool(CmdDisableNetwork + " " + strconv.Itoa(id))
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdDisableNetwork+" "+strconv.Itoa(id))
 }
 
 // SaveConfig will SaveConfig
 func (cl *Client) SaveConfig() error {
-	return cl.conn.SendCommandBool(CmdSaveConfig)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdSaveConfig)
 }
 
 // LoadConfig will LoadConfig
 func (cl *Client) LoadConfig() error {
-	return cl.conn.SendCommandBool(CmdReconfigure)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdReconfigure)
 }
 
 // GetNetworkAttr will get the given attribute of the given network
 func (cl *Client) GetNetworkAttr(id int, attr string) (string, error) {
-	s, err := cl.conn.SendCommand(CmdGetNetwork, strconv.Itoa(id), attr)
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	s, err := cl.conn.SendCommandWithContext(ctx, CmdGetNetwork, strconv.Itoa(id), attr)
 	if err != nil {
 		return s, err
 	}

@@ -163,7 +163,11 @@ func (c *Conn) SendCommandWithContext(ctx context.Context, command ...string) (s
 // SendCommandBool will send a command and return an error
 // if the response was not OK
 func (c *Conn) SendCommandBool(command ...string) error {
-	resp, err := c.SendCommand(command...)
+	return c.SendCommandBoolWithContext(context.Background(), command...)
+}
+
+func (c *Conn) SendCommandBoolWithContext(ctx context.Context, command ...string) error {
+	resp, err := c.SendCommandWithContext(ctx, command...)
 	if err != nil {
 		return err
 	}
@@ -175,7 +179,11 @@ func (c *Conn) SendCommandBool(command ...string) error {
 
 // SendCommandInt will send a command where the response is expected to be an integer
 func (c *Conn) SendCommandInt(command ...string) (int, error) {
-	resp, err := c.SendCommand(command...)
+	return c.SendCommandIntWithContext(context.Background(), command...)
+}
+
+func (c *Conn) SendCommandIntWithContext(ctx context.Context, command ...string) (int, error) {
+	resp, err := c.SendCommandWithContext(ctx, command...)
 	if err != nil {
 		return 0, err
 	}

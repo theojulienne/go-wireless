@@ -131,6 +131,10 @@ func addNetwork(c *gin.Context) {
 	}
 	nw.Disable(disable)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	wc.WithContext(ctx)
 	newNet, err := wc.AddNetwork(nw)
 	if err != nil {
 		c.Error(err)

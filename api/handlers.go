@@ -20,6 +20,8 @@ func errStatus(err error) int {
 	switch err {
 	case wireless.ErrFailBusy:
 		return 409
+	case wireless.ErrNoIdentifier, wireless.ErrAssocRejected, wireless.ErrSSIDNotFound:
+		return 400
 	default:
 		return 500
 	}
@@ -154,6 +156,7 @@ func addNetwork(c *gin.Context) {
 			c.Error(err)
 
 			if err == wireless.ErrSSIDNotFound && force {
+				wc.SaveConfig()
 				c.JSON(200, newNet)
 				return
 			}
@@ -164,5 +167,6 @@ func addNetwork(c *gin.Context) {
 		}
 	}
 
+	wc.SaveConfig()
 	c.JSON(200, newNet)
 }

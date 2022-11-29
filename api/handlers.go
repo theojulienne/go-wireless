@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -98,6 +99,10 @@ func getInterface(c *gin.Context) {
 
 func addNetwork(c *gin.Context) {
 	iface := c.Param("iface")
+	if iface == "" {
+		c.AbortWithStatusJSON(400, json(errors.New("must specify interface name")))
+		return
+	}
 
 	disable := false
 	if v, ok := c.GetQuery("disable"); ok && v == "1" {
@@ -110,6 +115,11 @@ func addNetwork(c *gin.Context) {
 	force := false
 	if v, ok := c.GetQuery("force"); ok && v == "1" {
 		force = true
+	}
+
+	hidden := false
+	if v, ok := c.GetQuery("hidden"); ok && v == "1" {
+		hidden = true
 	}
 
 	connect := false
@@ -134,6 +144,10 @@ func addNetwork(c *gin.Context) {
 		return
 	}
 
+	if hidden {
+		nw.ScanSSID = true
+	}
+
 	if connect {
 		disable = false
 	}
@@ -141,8 +155,9 @@ func addNetwork(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
 	wc.WithContext(ctx)
+
+	wc.LoadConfig()
 	newNet, err := wc.AddNetwork(nw)
 	if err != nil {
 		c.Error(err)
@@ -150,10 +165,21 @@ func addNetwork(c *gin.Context) {
 		return
 	}
 
+	// disable all but the SSID we are trying to connect to
+	disableMap := map[int]bool{}
+	nets, _ := wc.Networks()
+	for _, net := range nets {
+		if net.SSID != newNet.SSID {
+			disableMap[net.ID] = net.IsDisabled()
+			wc.DisableNetwork(net.ID)
+		}
+	}
+
 	if connect {
 		newNet, err = wc.Connect(newNet)
 		if err != nil {
 			c.Error(err)
+			reEnable(disableMap, wc)
 
 			if err == wireless.ErrSSIDNotFound && force {
 				wc.SaveConfig()
@@ -167,6 +193,32 @@ func addNetwork(c *gin.Context) {
 		}
 	}
 
+	nets, err = wc.Networks()
+	if err != nil {
+		c.AbortWithStatusJSON(500, json(errors.New("network wasn't added")))
+		return
+	}
+
+	curr, connected := nets.FindCurrent()
+	if !connected {
+		c.AbortWithStatusJSON(503, json(errors.New("not connected to any SSID")))
+		return
+	}
+
+	if curr.SSID != newNet.SSID {
+		c.AbortWithStatusJSON(502, json(errors.New("connected to unexpected SSID "+curr.SSID)))
+		return
+	}
+
+	reEnable(disableMap, wc)
 	wc.SaveConfig()
 	c.JSON(200, newNet)
+}
+
+func reEnable(disableMap map[int]bool, wc *wireless.Client) {
+	for id, disabled := range disableMap {
+		if !disabled {
+			wc.EnableNetwork(id)
+		}
+	}
 }

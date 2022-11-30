@@ -189,11 +189,8 @@ func (net Network) Attributes(sep, indent string) []string {
 
 	lines = append(lines, indent+"ssid"+sep+quote(net.SSID))
 	lines = append(lines, indent+"id_str"+sep+quote(net.SSID))
-	switch {
-	case net.Known && net.PSK != "":
-		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
-	case net.Known:
-	case net.PSK != "":
+
+	if net.PSK != "" {
 		lines = append(lines, indent+"psk"+sep+quote(net.PSK))
 	}
 

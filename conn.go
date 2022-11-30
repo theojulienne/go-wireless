@@ -107,6 +107,10 @@ func (c *Conn) init() error {
 		return err
 	}
 
+	if v := os.Getenv("LOG"); v != "" {
+		c.WithLogOutput(os.Stderr)
+	}
+
 	c.lsockname = fmt.Sprintf("/tmp/wpa_ctrl_%d_%d", os.Getpid(), rand.Intn(10000))
 	laddr, err := net.ResolveUnixAddr("unixgram", c.lsockname)
 	if err != nil {

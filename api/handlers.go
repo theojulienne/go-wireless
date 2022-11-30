@@ -165,17 +165,21 @@ func addNetwork(c *gin.Context) {
 		return
 	}
 
-	// disable all but the SSID we are trying to connect to
-	disableMap := map[int]bool{}
-	nets, _ := wc.Networks()
-	for _, net := range nets {
-		if net.SSID != newNet.SSID {
-			disableMap[net.ID] = net.IsDisabled()
-			wc.DisableNetwork(net.ID)
-		}
-	}
-
 	if connect {
+		// disable all but the SSID we are trying to connect to
+		disableMap := map[int]bool{}
+		nets, _ := wc.Networks()
+		for _, net := range nets {
+			if net.SSID != newNet.SSID {
+				disableMap[net.ID] = net.IsDisabled()
+				wc.DisableNetwork(net.ID)
+			}
+		}
+
+		// Ensure the network is selected
+		time.Sleep(time.Second / 10)
+		wc.SelectNetwork(newNet.ID)
+
 		newNet, err = wc.Connect(newNet)
 		if err != nil {
 			c.Error(err)
@@ -193,7 +197,7 @@ func addNetwork(c *gin.Context) {
 		}
 	}
 
-	nets, err = wc.Networks()
+	nets, err := wc.Networks()
 	if err != nil {
 		c.AbortWithStatusJSON(500, json(errors.New("network wasn't added")))
 		return
@@ -210,7 +214,6 @@ func addNetwork(c *gin.Context) {
 		return
 	}
 
-	reEnable(disableMap, wc)
 	wc.SaveConfig()
 	c.JSON(200, newNet)
 }

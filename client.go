@@ -317,6 +317,17 @@ func (cl *Client) EnableNetworkWithContext(ctx context.Context, id int) error {
 	return cl.conn.SendCommandBoolWithContext(ctx, CmdEnableNetwork, strconv.Itoa(id))
 }
 
+// SelectNetwork will SelectNetwork
+func (cl *Client) SelectNetwork(id int) error {
+	ctx, cancel := cl.getContext()
+	defer cancel()
+	return cl.SelectNetworkWithContext(ctx, id)
+}
+
+func (cl *Client) SelectNetworkWithContext(ctx context.Context, id int) error {
+	return cl.conn.SendCommandBoolWithContext(ctx, CmdSelectNetwork, strconv.Itoa(id))
+}
+
 // Disconnect will Disconnect
 func (cl *Client) Disconnect() error {
 	ctx, cancel := cl.getContext()

@@ -13,15 +13,17 @@ build:
 test:
 	go test ./... -race
 
-wpapi_pkg:
+wpapi:
 	GOARCH=arm64 go build -o bin/wpapi.arm64 ./cmd/wpapi
+	GOARCH=amd64 go build -o bin/wpapi.amd64 ./cmd/wpapi
+
+wpapi_pkg:
 	mkdir -p dpkg/wpapi/usr/bin
 	rm -f dpkg/wpapi/usr/bin/wpapi
 	cp bin/wpapi.arm64 dpkg/wpapi/usr/bin/wpapi
 	IAN_DIR=dpkg/wpapi ian set -a arm64
 	IAN_DIR=dpkg/wpapi ian pkg
 
-	GOARCH=amd64 go build -o bin/wpapi.amd64 ./cmd/wpapi
 	mkdir -p dpkg/wpapi/usr/bin
 	rm -f dpkg/wpapi/usr/bin/wpapi
 	cp bin/wpapi.amd64 dpkg/wpapi/usr/bin/wpapi

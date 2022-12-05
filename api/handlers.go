@@ -158,7 +158,7 @@ func addNetwork(c *gin.Context) {
 	wc.WithContext(ctx)
 
 	wc.LoadConfig()
-	newNet, err := wc.AddNetwork(nw)
+	newNet, err := getListedNetwork(wc, nw)
 	if err != nil {
 		c.Error(err)
 		c.AbortWithStatusJSON(errStatus(err), json(err))
@@ -166,24 +166,12 @@ func addNetwork(c *gin.Context) {
 	}
 
 	if connect {
-		// disable all but the SSID we are trying to connect to
-		disableMap := map[int]bool{}
-		nets, _ := wc.Networks()
-		for _, net := range nets {
-			if net.SSID != newNet.SSID {
-				disableMap[net.ID] = net.IsDisabled()
-				wc.DisableNetwork(net.ID)
-			}
-		}
-
-		// Ensure the network is selected
-		time.Sleep(time.Second / 10)
-		wc.SelectNetwork(newNet.ID)
+		// Disconnect to allow new credentials to be tried
+		wc.Disconnect()
 
 		newNet, err = wc.Connect(newNet)
 		if err != nil {
 			c.Error(err)
-			reEnable(disableMap, wc)
 
 			if err == wireless.ErrSSIDNotFound && force {
 				wc.SaveConfig()
@@ -218,10 +206,14 @@ func addNetwork(c *gin.Context) {
 	c.JSON(200, newNet)
 }
 
-func reEnable(disableMap map[int]bool, wc *wireless.Client) {
-	for id, disabled := range disableMap {
-		if !disabled {
-			wc.EnableNetwork(id)
+func getListedNetwork(client *wireless.Client, candidate wireless.Network) (net wireless.Network, err error) {
+	networks, _ := client.Networks()
+
+	for _, network := range networks {
+		if network.SSID == candidate.SSID {
+			network.PSK = candidate.PSK
+			return network, nil
 		}
 	}
+	return client.AddNetwork(candidate)
 }

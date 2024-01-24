@@ -3,11 +3,16 @@ package wireless
 import (
 	"bytes"
 	"encoding/csv"
+	"log"
 	"net"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+)
+
+const (
+	skipCheck = -1
 )
 
 func parseNetwork(b []byte) ([]Network, error) {
@@ -25,7 +30,7 @@ func parseNetwork(b []byte) ([]Network, error) {
 		return nil, err
 	}
 
-	nts := []Network{}
+	var nts []Network
 	for _, rec := range recs {
 		id, err := strconv.Atoi(rec[0])
 		if err != nil {
@@ -63,28 +68,35 @@ func parseAP(b []byte) ([]AP, error) {
 
 	r := csv.NewReader(bytes.NewReader(b))
 	r.Comma = '\t'
-	r.FieldsPerRecord = 5
+	r.FieldsPerRecord = skipCheck
 
 	recs, err := r.ReadAll()
 	if err != nil {
 		return nil, err
 	}
 
-	aps := []AP{}
+	var aps []AP
 	for _, rec := range recs {
+		if len(rec) != 5 {
+			continue
+		}
+
 		bssid, err := net.ParseMAC(rec[0])
 		if err != nil {
-			return nil, errors.Wrap(err, "parse mac")
+			log.Printf("parse mac: %s", err)
+			continue
 		}
 
 		fr, err := strconv.Atoi(rec[1])
 		if err != nil {
-			return nil, errors.Wrap(err, "parse frequency")
+			log.Printf("parse frequency: %s", err)
+			continue
 		}
 
 		ss, err := strconv.Atoi(rec[2])
 		if err != nil {
-			return nil, errors.Wrap(err, "parse signal strength")
+			log.Printf("parse signal strength: %s", err)
+			continue
 		}
 
 		aps = append(aps, AP{
